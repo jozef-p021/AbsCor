@@ -251,5 +251,3 @@ if __name__ == '__main__':
     ax = fig.add_subplot(1, 1, 1, projection='3d')
     cset = ax.plot_surface(det.xd, det.yd, Z2, cmap='jet')
     plt.savefig(fname.replace(".edf", ".png"))
-
-    plt.show()
