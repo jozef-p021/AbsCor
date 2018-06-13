@@ -1,3 +1,4 @@
+import argparse
 import time
 from multiprocessing import Pool
 
@@ -223,17 +224,23 @@ def writeOutput(det, output):
 
 
 if __name__ == '__main__':
+    p = argparse.ArgumentParser()
+    p.add_argument("--detX", default=500)
+    p.add_argument("--detY", default=500)
+    p.add_argument("--N", default=1000)
+    args = p.parse_args()
+
     slit_x, cdf_x = generate_photon_statistics('./slit_scan/slit_05x05_00001.fio', 1.1, True)
     slit_y, cdf_y = generate_photon_statistics('./slit_scan/slit_05x05_00002.fio', 2.3, True)
 
-    det = Detector(500, 500)
+    det = Detector(args.detX, args.detY)
     det.SDD = 374.836
     xd_off = -1028.607
     yd_off = -1016.952
     det.detector_offset(xd_off, yd_off)
     sam = Sample(20, 0.75)
     # sam.sample_offset(0.0, 0.0, 0.0)
-    N = 1000
+    N = args.N
 
     t = time.time()
     pool = Pool(initializer=init, initargs=(det, sam, N, slit_x, cdf_x, slit_y, cdf_y))
