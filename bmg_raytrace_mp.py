@@ -1,4 +1,5 @@
 import time
+from multiprocessing import Pool
 
 import fabio
 import matplotlib.pyplot as plt
@@ -59,9 +60,9 @@ class Sample:
     def generate_random_points_within_sample(self, N, slit_x, cdf_x, slit_y, cdf_y):
         """
         """
-        xn = np.array([])
-        yn = np.array([])
-        zn = np.array([])
+        xn = np.array([], dtype=np.float32)
+        yn = np.array([], dtype=np.float32)
+        zn = np.array([], dtype=np.float32)
         while True:
             x = np.interp(np.random.rand(N), cdf_x, slit_x)
             y = np.interp(np.random.rand(N), cdf_y, slit_y)
@@ -77,9 +78,9 @@ class Sample:
     def generate_normal_points_within_sample(self, N):
         """
         """
-        xn = np.array([])
-        yn = np.array([])
-        zn = np.array([])
+        xn = np.array([], dtype=np.float32)
+        yn = np.array([], dtype=np.float32)
+        zn = np.array([], dtype=np.float32)
         while True:
             x = np.random.normal(0, 0.2, N)
             y = np.random.normal(0, 0.2, N)
@@ -114,7 +115,7 @@ class Detector:
     def __init__(self, xdim=6, ydim=10):
         self.xdim = xdim
         self.ydim = ydim
-        self.data = np.zeros([ydim, xdim])
+        self.data = np.zeros([ydim, xdim], dtype=np.float32)
         self.xd, self.yd = np.meshgrid(np.arange(0, xdim, 1) * self.pixel_size, np.arange(0, ydim, 1) * self.pixel_size)
 
     def detector_offset(self, xd_off, yd_off):
@@ -123,6 +124,9 @@ class Detector:
 
     def increase_intensity_of_pixel(self, r, s, value):
         self.data[r, s] += value
+
+    def increase_intensity_of_pixel_row(self, r, value):
+        self.data[r, :] += value
 
     def generate_random_points_within_pixel(self, N, r, s):
         """
@@ -156,7 +160,7 @@ def generate_photon_statistics(slitscan, xo=0, mirror=False):
     return x, cdf
 
 
-def beam_path_within_sample(xB, yB, zB, xD, yD, zD):
+def beam_path_within_sample(sam, xB, yB, zB, xD, yD, zD):
     """
     """
     ### path_in
@@ -193,11 +197,34 @@ def save_as(data):
     header['photons_per_pixel'] = N
     output.header = header
     output.data = data
-    output.write('AbsCor_' + param + datestring + '.edf')
+    fileName = 'AbsCor_' + param + datestring + '.edf'
+    output.write(fileName)
+    return fileName
+
+
+def init(det, sam, N, slit_x, cdf_x, slit_y, cdf_y):
+    global detG, samG, NG, slit_xG, cdf_xG, slit_yG, cdf_yG
+    detG, samG, NG, slit_xG, cdf_xG, slit_yG, cdf_yG = det, sam, N, slit_x, cdf_x, slit_y, cdf_y
+
+
+def calculateRowIntensity(j):
+    intensity = []
+    for i in range(detG.xdim):
+        xB, yB, zB = samG.generate_random_points_within_sample(NG, slit_xG, cdf_xG, slit_yG, cdf_yG)
+        xD, yD, zD = detG.generate_random_points_within_pixel(NG, j, i)
+        beam_path = beam_path_within_sample(samG, xB, yB, zB, xD, yD, zD)
+        intensity.append(np.mean(np.exp(-beam_path / samG.mu)))
+
+    return j, intensity
+
+
+def writeOutput(det, output):
+    for value in output:
+        row, output = value
+        det.increase_intensity_of_pixel_row(row, output)
 
 
 if __name__ == '__main__':
-
     slit_x, cdf_x = generate_photon_statistics('./slit_scan/slit_05x05_00001.fio', 1.1, True)
     slit_y, cdf_y = generate_photon_statistics('./slit_scan/slit_05x05_00002.fio', 2.3, True)
 
@@ -208,62 +235,21 @@ if __name__ == '__main__':
     det.detector_offset(xd_off, yd_off)
     sam = Sample(20, 0.75)
     # sam.sample_offset(0.0, 0.0, 0.0)
-
     N = 1000
-    t0 = time.time()
-    for j in range(det.ydim):
-        t1 = time.time()
-        for i in range(det.xdim):
-            xB, yB, zB = sam.generate_random_points_within_sample(N, slit_x, cdf_x, slit_y, cdf_y)
-            # xB, yB, zB = sam.generate_normal_points_within_sample(N)
-            xD, yD, zD = det.generate_random_points_within_pixel(N, j, i)
-            beam_path = beam_path_within_sample(xB, yB, zB, xD, yD, zD)
-            value = np.mean(np.exp(-beam_path / sam.mu))
-            det.increase_intensity_of_pixel(j, i, value)
-        t2 = time.time()
-        print '{0:04d}.\t{1:.2f}% done in {2:.2f} min, (total {3:.2f} min), remaining {4:.2f} min\n'.format((j + 1),
-                                                                                                            1e2 * (
-                                                                                                                        j + 1) / det.ydim,
-                                                                                                            (
-                                                                                                                        t2 - t0) / 60.0,
-                                                                                                            det.ydim * (
-                                                                                                                        t2 - t0) / (
-                                                                                                                        60.0 * (
-                                                                                                                            j + 1)),
-                                                                                                            det.ydim * (
-                                                                                                                        t2 - t0) / (
-                                                                                                                        60.0 * (
-                                                                                                                            j + 1)) - (
-                                                                                                                        t2 - t0) / 60.0)
 
-    print(det.data)
+    t = time.time()
+    pool = Pool(initializer=init, initargs=(det, sam, N, slit_x, cdf_x, slit_y, cdf_y))
+    pool.map_async(calculateRowIntensity, range(det.ydim), callback=lambda output, det=det: writeOutput(det, output))
+    pool.close()
+    pool.join()
+    print(time.time() - t)
+
     Z2 = ndimage.gaussian_filter(1 / det.data, sigma=20, order=0)
-    save_as(np.float32(Z2))
+    fname = save_as(Z2)
 
     fig = plt.figure()
-    # ax = Axes3D(fig)
     ax = fig.add_subplot(1, 1, 1, projection='3d')
-    # X, Y, Z = axes3d.get_test_data(0.05)
-    # cset = ax.plot_surface(X, Y, Z, 16, extend3d=True)
-    # ax.clabel(cset, fontsize=9, inline=1)
     cset = ax.plot_surface(det.xd, det.yd, Z2, cmap='jet')
-    # ax.clabel(cset, fontsize=9, inline=1)
-    # ax1 = fig.add_subplot(111, extend3d=True)
-    # ax1.plot_surface(det.xd, det.yd, Z2, cmap='jet')
-    # ax1.contour(X, Y, Z, zorder=10)
+    plt.savefig(fname.replace(".edf", ".png"))
 
-    # j = 0
-    # i = 1023
-    # xB, yB, zB = sam.generate_random_points_within_sample(N, slit_x, cdf_x, slit_y, cdf_y)
-    # xD, yD, zD = det.generate_random_points_within_pixel(N, j, i)
-    # beam_path = beam_path_within_sample(xB, yB, zB, xD, yD, zD)
-    # print beam_path
-
-    # x, y, z = sam.generate_shape(200)
-
-    # plt.scatter(zB, yB)
-    # plt.scatter(z, y, marker='.')
-
-    # xi, yi, zi = sam.generate_random_points_within_sample(N, slit_x, cdf_x, slit_y, cdf_y)
-    # plt.hist2d(zB,yB, 40, cmap='jet')
     plt.show()
