@@ -2,9 +2,7 @@ import time
 from multiprocessing import Pool
 
 import fabio
-import matplotlib.pyplot as plt
 import numpy as np
-from mpl_toolkits.mplot3d import Axes3D, axes3d
 from scipy import ndimage
 
 
@@ -246,8 +244,3 @@ if __name__ == '__main__':
 
     Z2 = ndimage.gaussian_filter(1 / det.data, sigma=20, order=0)
     fname = save_as(Z2)
-
-    fig = plt.figure()
-    ax = fig.add_subplot(1, 1, 1, projection='3d')
-    cset = ax.plot_surface(det.xd, det.yd, Z2, cmap='jet')
-    plt.savefig(fname.replace(".edf", ".png"))
