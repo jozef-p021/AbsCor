@@ -39,6 +39,7 @@ if __name__ == '__main__':
     p.add_argument("--detX", default=50)
     p.add_argument("--detY", default=50)
     p.add_argument("--N", default=1000)
+    p.add_argument("--batchSize", default=cpu_count())
     args = p.parse_args()
 
     slit_x, cdf_x = generate_photon_statistics('./slit_scan/slit_05x05_00001.fio', 1.1, True)
@@ -52,12 +53,12 @@ if __name__ == '__main__':
     sam = Sample(20, 0.75)
     N = int(args.N)
 
-    cpuNodes = cpu_count()
+    batchSize = int(args.batchSize)
 
     numPixels = det.xdim * det.ydim
-    arraySize, rest = numPixels / cpuNodes, numPixels % cpuNodes
+    arraySize, rest = numPixels / batchSize, numPixels % batchSize
 
-    ranges = zip([cpuNode * arraySize for cpuNode in range(cpuNodes)], (arraySize,) * cpuNodes)
+    ranges = zip([cpuNode * arraySize for cpuNode in range(batchSize)], (arraySize,) * batchSize)
     if rest > 0:
         ranges[-1] = (7 * arraySize, arraySize + rest)
 
