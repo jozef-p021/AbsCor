@@ -37,10 +37,10 @@ def writeOutput(det, output):
 
 if __name__ == '__main__':
     p = argparse.ArgumentParser()
-    p.add_argument("--detX", default=500)
-    p.add_argument("--detY", default=500)
+    p.add_argument("--detX", default=50)
+    p.add_argument("--detY", default=50)
     p.add_argument("--N", default=1000)
-    p.add_argument("--batchSize", default=500)
+    p.add_argument("--batchSize", default=50)
     args = p.parse_args()
 
     slit_x, cdf_x = generate_photon_statistics('./slit_scan/slit_05x05_00001.fio', 1.1, True)
@@ -60,9 +60,8 @@ if __name__ == '__main__':
 
     ranges = zip([cpuNode * arraySize for cpuNode in range(batchSize)], (arraySize,) * batchSize)
     if rest > 0:
-        ranges[-1] = (7 * arraySize, arraySize + rest)
+        ranges[-1] = ((batchSize-1) * arraySize, arraySize + rest)
 
-    print(cpu_count())
     pool = Pool(initializer=init, initargs=(det, sam, N, slit_x, cdf_x, slit_y, cdf_y), processes=cpu_count())
     pool.map_async(calculateIntensity, ranges, callback=lambda output, det=det: writeOutput(det, output))
     pool.close()
