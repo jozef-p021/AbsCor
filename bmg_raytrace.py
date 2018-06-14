@@ -201,7 +201,7 @@ if __name__ == '__main__':
     slit_x, cdf_x = generate_photon_statistics('./slit_scan/slit_05x05_00001.fio', 1.1, True)
     slit_y, cdf_y = generate_photon_statistics('./slit_scan/slit_05x05_00002.fio', 2.3, True)
 
-    det = Detector(500, 500)
+    det = Detector(50, 50)
     det.SDD = 374.836
     xd_off = -1028.607
     yd_off = -1016.952
