@@ -3,6 +3,9 @@ import numpy as np
 import fabio
 import time
 
+from scipy import ndimage
+
+
 class Detector:
     """
     This defines detector, its dimensions in [pixels] and pixel size in [mm]
@@ -55,6 +58,7 @@ class Detector:
         datestring = '{0:d}-{1:02d}-{2:02d}_{3:02d}-{4:02d}-{5:02d}'.format(p.tm_year, p.tm_mon, p.tm_mday, p.tm_hour,
                                                                             p.tm_min, p.tm_sec)
 
+        savingData = ndimage.gaussian_filter(1 / self.data, sigma=20, order=0)
         output = fabio.edfimage.EdfImage()
         header = {}
         header['DISTANCE'] = self.SDD
@@ -65,7 +69,7 @@ class Detector:
         header['sample_radius'] = sample.radius
         header['photons_per_pixel'] = numberOfPhotons
         output.header = header
-        output.data = self.data
+        output.data = savingData
         if fileName is None:
             fileName = 'AbsCor_' + param + datestring + '.edf'
 

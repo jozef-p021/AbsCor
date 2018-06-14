@@ -53,5 +53,4 @@ if __name__ == '__main__':
     pool.close()
     pool.join()
 
-    Z2 = ndimage.gaussian_filter(1 / det.data, sigma=20, order=0)
     det.save_output(sam, N)
