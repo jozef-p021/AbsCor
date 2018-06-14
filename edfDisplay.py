@@ -12,7 +12,8 @@ if __name__ == '__main__':
     output = fabio.openimage.openimage(args.image)
     detX, detY = output.data.shape
     det = Detector(detX, detY)
-
+    
+    
     fig = plt.figure()
     ax = fig.add_subplot(1, 1, 1, projection='3d')
     cset = ax.plot_surface(det.xd, det.yd, output.data, cmap='jet')

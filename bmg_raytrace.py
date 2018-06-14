@@ -201,7 +201,7 @@ if __name__ == '__main__':
     slit_x, cdf_x = generate_photon_statistics('./slit_scan/slit_05x05_00001.fio', 1.1, True)
     slit_y, cdf_y = generate_photon_statistics('./slit_scan/slit_05x05_00002.fio', 2.3, True)
 
-    det = Detector(50, 50)
+    det = Detector(500, 500)
     det.SDD = 374.836
     xd_off = -1028.607
     yd_off = -1016.952
@@ -236,7 +236,7 @@ if __name__ == '__main__':
                                                                                                                             j + 1)) - (
                                                                                                                         t2 - t0) / 60.0)
 
-    print(det.data)
+    print(det.data, det.data.shape)
     Z2 = ndimage.gaussian_filter(1 / det.data, sigma=20, order=0)
     save_as(np.float32(Z2))
 

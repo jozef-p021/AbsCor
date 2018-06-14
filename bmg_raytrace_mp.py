@@ -3,6 +3,7 @@ import argparse
 from multiprocessing import Pool
 
 import numpy as np
+import time
 from detector import Detector
 from sample import Sample
 from scipy import ndimage
@@ -32,8 +33,8 @@ def writeOutput(det, output):
 
 if __name__ == '__main__':
     p = argparse.ArgumentParser()
-    p.add_argument("--detX", default=50)
-    p.add_argument("--detY", default=50)
+    p.add_argument("--detX", default=500)
+    p.add_argument("--detY", default=500)
     p.add_argument("--N", default=1000)
     args = p.parse_args()
 
@@ -47,10 +48,10 @@ if __name__ == '__main__':
     det.detector_offset(xd_off, yd_off)
     sam = Sample(20, 0.75)
     N = int(args.N)
-
+    t = time.time()
     pool = Pool(initializer=init, initargs=(det, sam, N, slit_x, cdf_x, slit_y, cdf_y))
     pool.map_async(calculateRowIntensity, range(det.ydim), callback=lambda output, det=det: writeOutput(det, output))
     pool.close()
     pool.join()
-
+    print(time.time() - t)
     det.save_output(sam, N)
