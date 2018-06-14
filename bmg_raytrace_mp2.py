@@ -62,7 +62,8 @@ if __name__ == '__main__':
     if rest > 0:
         ranges[-1] = (7 * arraySize, arraySize + rest)
 
-    pool = Pool(initializer=init, initargs=(det, sam, N, slit_x, cdf_x, slit_y, cdf_y))
+    print(cpu_count())
+    pool = Pool(initializer=init, initargs=(det, sam, N, slit_x, cdf_x, slit_y, cdf_y), processes=cpu_count())
     pool.map_async(calculateIntensity, ranges, callback=lambda output, det=det: writeOutput(det, output))
     pool.close()
     pool.join()
