@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 
+
 class Sample:
     """
     This defines the sample and its geometry.

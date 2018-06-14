@@ -4,6 +4,7 @@ from multiprocessing import Pool, cpu_count
 
 import itertools
 import numpy as np
+import time
 from detector import Detector
 from sample import Sample
 from scipy import ndimage
@@ -19,7 +20,7 @@ def init(det, sam, N, slit_x, cdf_x, slit_y, cdf_y):
     detG, samG, NG, slit_xG, cdf_xG, slit_yG, cdf_yG = det, sam, N, slit_x, cdf_x, slit_y, cdf_y
 
 
-def calculateRowIntensity(input):
+def calculateIntensity(input):
     i, j = input
     intensity = []
     for detPixel in range(i, i + j):
@@ -36,10 +37,10 @@ def writeOutput(det, output):
 
 if __name__ == '__main__':
     p = argparse.ArgumentParser()
-    p.add_argument("--detX", default=50)
-    p.add_argument("--detY", default=50)
+    p.add_argument("--detX", default=500)
+    p.add_argument("--detY", default=500)
     p.add_argument("--N", default=1000)
-    p.add_argument("--batchSize", default=cpu_count())
+    p.add_argument("--batchSize", default=500)
     args = p.parse_args()
 
     slit_x, cdf_x = generate_photon_statistics('./slit_scan/slit_05x05_00001.fio', 1.1, True)
@@ -54,7 +55,6 @@ if __name__ == '__main__':
     N = int(args.N)
 
     batchSize = int(args.batchSize)
-
     numPixels = det.xdim * det.ydim
     arraySize, rest = numPixels / batchSize, numPixels % batchSize
 
@@ -63,8 +63,13 @@ if __name__ == '__main__':
         ranges[-1] = (7 * arraySize, arraySize + rest)
 
     pool = Pool(initializer=init, initargs=(det, sam, N, slit_x, cdf_x, slit_y, cdf_y))
-    pool.map_async(calculateRowIntensity, ranges, callback=lambda output, det=det: writeOutput(det, output))
+    pool.map_async(calculateIntensity, ranges, callback=lambda output, det=det: writeOutput(det, output))
     pool.close()
     pool.join()
 
     det.save_output(sam, N)
+    # Z2 = ndimage.gaussian_filter(1 / det.data, sigma=20, order=0)
+    # fig = plt.figure()
+    # ax = fig.add_subplot(1, 1, 1, projection='3d')
+    # cset = ax.plot_surface(det.xd, det.yd, Z2, cmap='jet')
+    # plt.show()

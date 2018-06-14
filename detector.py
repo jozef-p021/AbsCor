@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-import numpy as np
-import fabio
 import time
 
+import fabio
+import numpy as np
 from scipy import ndimage
 
 
@@ -47,7 +47,7 @@ class Detector:
         """
         x = self.xd[r, s] + np.random.rand(1, N) * self.pixel_size
         y = self.yd[r, s] + np.random.rand(1, N) * self.pixel_size
-        z = np.ones([1, N]) * self.SDD
+        z = np.ones([1, N], dtype=np.float32) * self.SDD
         return x, y, z
 
     def save_output(self, sample, numberOfPhotons, fileName=None):
