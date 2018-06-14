@@ -40,7 +40,7 @@ class Detector:
         self.data[r, s] += value
 
     def increase_intensity_of_pixel_row(self, r, value):
-        self.data[r, :] += value
+        self.data[r][:] += value
 
     def generate_random_points_within_pixel(self, N, r, s):
         """
