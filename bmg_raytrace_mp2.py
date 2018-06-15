@@ -68,8 +68,8 @@ if __name__ == '__main__':
     pool.join()
 
     det.save_output(sam, N)
-    # Z2 = ndimage.gaussian_filter(1 / det.data, sigma=20, order=0)
-    # fig = plt.figure()
-    # ax = fig.add_subplot(1, 1, 1, projection='3d')
-    # cset = ax.plot_surface(det.xd, det.yd, Z2, cmap='jet')
-    # plt.show()
+    Z2 = ndimage.gaussian_filter(1 / det.data, sigma=20, order=0)
+    fig = plt.figure()
+    ax = fig.add_subplot(1, 1, 1, projection='3d')
+    cset = ax.plot_surface(det.xd, det.yd, Z2, cmap='jet')
+    plt.show()
