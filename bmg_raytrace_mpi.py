@@ -50,7 +50,7 @@ def calculateIntensity(input):
 
 if rank == 0:
     procCount = comm.Get_size()
-    batchSize = int(args.batchSize)
+    batchSize = size - 1
     numPixels = det.xdim * det.ydim
     arraySize, rest = numPixels / batchSize, numPixels % batchSize
 
@@ -63,7 +63,7 @@ if rank == 0:
 
     recieveCount = len(ranges)
     output = np.zeros([det.xdim * det.ydim])
-
+    a = time()
     while recieveCount != 0:
         pixelRange, intensities = comm.recv(source=MPI.ANY_SOURCE)
         output[pixelRange[0]:sum(pixelRange)] += intensities
@@ -71,16 +71,17 @@ if rank == 0:
 
         det.data = np.reshape(output, [det.xdim, det.ydim])
 
+    print(time() - a)
     det.save_output(sam, N)
 
-    # import matplotlib.pyplot as plt
-    # from mpl_toolkits.mplot3d import Axes3D, axes3d
-    # from scipy import ndimage
-    # Z2 = ndimage.gaussian_filter(1 / det.data, sigma=20, order=0)
-    # fig = plt.figure()
-    # ax = fig.add_subplot(1, 1, 1, projection='3d')
-    # cset = ax.plot_surface(det.xd, det.yd, Z2, cmap='jet')
-    # plt.show()
+    import matplotlib.pyplot as plt
+    from mpl_toolkits.mplot3d import Axes3D, axes3d
+    from scipy import ndimage
+    Z2 = ndimage.gaussian_filter(1 / det.data, sigma=20, order=0)
+    fig = plt.figure()
+    ax = fig.add_subplot(1, 1, 1, projection='3d')
+    cset = ax.plot_surface(det.xd, det.yd, Z2, cmap='jet')
+    plt.show()
 
 
 else:
