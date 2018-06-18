@@ -19,6 +19,7 @@ p = argparse.ArgumentParser()
 p.add_argument("--detX", default=50)
 p.add_argument("--detY", default=50)
 p.add_argument("--N", default=1000)
+p.add_argument("--proc", default=4)
 args = p.parse_args()
 
 det = Detector(int(args.detX), int(args.detY))
@@ -80,14 +81,14 @@ if rank == 0:
     det.data = np.reshape(output, [det.xdim, det.ydim])
     det.save_output(sam, N)
 
-    import matplotlib.pyplot as plt
-    from mpl_toolkits.mplot3d import Axes3D, axes3d
-    from scipy import ndimage
-    Z2 = ndimage.gaussian_filter(1 / det.data, sigma=20, order=0)
-    fig = plt.figure()
-    ax = fig.add_subplot(1, 1, 1, projection='3d')
-    cset = ax.plot_surface(det.xd, det.yd, Z2, cmap='jet')
-    plt.show()
+    # import matplotlib.pyplot as plt
+    # from mpl_toolkits.mplot3d import Axes3D, axes3d
+    # from scipy import ndimage
+    # Z2 = ndimage.gaussian_filter(1 / det.data, sigma=20, order=0)
+    # fig = plt.figure()
+    # ax = fig.add_subplot(1, 1, 1, projection='3d')
+    # cset = ax.plot_surface(det.xd, det.yd, Z2, cmap='jet')
+    # plt.show()
 else:
     from multiprocessing import cpu_count
     import itertools
@@ -123,7 +124,7 @@ else:
             return intensity
 
 
-        processes = 4
+        processes = int(args.proc)
         arraySize, rest = pixelRange[1] / processes, pixelRange[1] % processes
         ranges = zip([cpuNode * arraySize + pixelRange[0] for cpuNode in range(processes)], (arraySize,) * processes)
         if rest > 0:
