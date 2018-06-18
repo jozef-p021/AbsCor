@@ -2,7 +2,6 @@
 from __future__ import print_function
 
 import argparse
-from time import time
 
 import numpy as np
 from mpi4py import MPI
@@ -16,16 +15,11 @@ size = MPI.COMM_WORLD.Get_size()
 rank = MPI.COMM_WORLD.Get_rank()
 name = MPI.Get_processor_name()
 
-a = time()
 p = argparse.ArgumentParser()
 p.add_argument("--detX", default=50)
 p.add_argument("--detY", default=50)
 p.add_argument("--N", default=1000)
-p.add_argument("--batchSize", default=50)
 args = p.parse_args()
-
-slit_x, cdf_x = generate_photon_statistics('./slit_scan/slit_05x05_00001.fio', 1.1, True)
-slit_y, cdf_y = generate_photon_statistics('./slit_scan/slit_05x05_00002.fio', 2.3, True)
 
 det = Detector(int(args.detX), int(args.detY))
 det.SDD = 374.836
@@ -61,11 +55,13 @@ if rank == 0:
 
     recieveCount = len(ranges)
 
+
     def storeData(data):
         global output, recieveCount
         pixelRange, intensities = data
         output[pixelRange[0]:sum(pixelRange)] += intensities
         recieveCount -= 1
+
 
     while len(ranges) != 0:
         dest = comm.recv(source=MPI.ANY_SOURCE)
@@ -94,7 +90,11 @@ if rank == 0:
     # plt.show()
 else:
     from multiprocessing import cpu_count
+
     print("Client from server: {}, cpu count: {}".format(name, int(cpu_count())))
+
+    slit_x, cdf_x = generate_photon_statistics('./slit_scan/slit_05x05_00001.fio', 1.1, True)
+    slit_y, cdf_y = generate_photon_statistics('./slit_scan/slit_05x05_00002.fio', 2.3, True)
 
     # Handshake with master, ask for pixel range
     comm.send(rank, dest=0)
