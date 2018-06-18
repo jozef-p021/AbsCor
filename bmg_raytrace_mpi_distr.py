@@ -2,12 +2,13 @@
 from __future__ import print_function
 
 import argparse
-from snippets import beam_path_within_sample
+
 import numpy as np
-import time
 from mpi4py import MPI
+
 from detector import Detector
 from sample import Sample
+from snippets import beam_path_within_sample
 
 comm = MPI.COMM_WORLD
 size = comm.Get_size()
@@ -32,7 +33,7 @@ N = int(args.N)
 def calculateIntensity(input):
     i, j = input
     intensity = []
-
+    
     xB, yB, zB = sam.generate_random_points_within_sample(N*j, slit_x, cdf_x, slit_y, cdf_y)
 
     for index, detPixel in enumerate(range(i, i + j)):
