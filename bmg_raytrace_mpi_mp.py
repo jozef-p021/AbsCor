@@ -51,6 +51,7 @@ if rank == 0:
     recieveCount = len(ranges)
     output = np.zeros([det.xdim * det.ydim])
     a = time()
+
     while recieveCount != 0:
         pixelRange, intensities = comm.recv(source=MPI.ANY_SOURCE)
         output[pixelRange[0]:sum(pixelRange)] += intensities
