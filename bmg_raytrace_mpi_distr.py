@@ -5,13 +5,11 @@ import argparse
 from time import time
 
 import numpy as np
-import sys
 from mpi4py import MPI
 
 from detector import Detector
 from sample import Sample
 from snippets import generate_photon_statistics, beam_path_within_sample
-import logging
 
 comm = MPI.COMM_WORLD
 size = MPI.COMM_WORLD.Get_size()
@@ -51,10 +49,7 @@ def calculateIntensity(input):
 
 
 if rank == 0:
-    logger = logging.getLogger("log")
-    logger.addHandler(logging.StreamHandler(sys.stdout))
-    logger.debug("Master from server: {0}, proc count: {1}".format(name, int(size)))
-
+    print("Master from server: {}, proc count: {}".format(name, int(size)))
     batchSize = size - 1
     numPixels = det.xdim * det.ydim
     arraySize, rest = numPixels / batchSize, numPixels % batchSize
@@ -99,9 +94,7 @@ if rank == 0:
     # plt.show()
 else:
     from multiprocessing import cpu_count
-    logger = logging.getLogger("log")
-    logger.addHandler(logging.StreamHandler(sys.stdout))
-    logger.debug("Client from server: {0}, cpu count: {1}".format(name, int(cpu_count())))
+    print("Client from server: {}, cpu count: {}".format(name, int(cpu_count())))
 
     # Handshake with master, ask for pixel range
     comm.send(rank, dest=0)
