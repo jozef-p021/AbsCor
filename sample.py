@@ -66,7 +66,7 @@ class Sample:
             xn = np.append(xn, xi)
             yn = np.append(yn, yi)
             zn = np.append(zn, zi)
-            if len(xn) > N:
+            if len(xn) >= N:
                 break
             else:
                 genN = int((N - len(xn)) * 1.4)

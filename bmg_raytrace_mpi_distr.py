@@ -16,8 +16,8 @@ rank = comm.Get_rank()
 name = MPI.Get_processor_name()
 
 p = argparse.ArgumentParser()
-p.add_argument("--detX", default=50)
-p.add_argument("--detY", default=50)
+p.add_argument("--detX", default=500)
+p.add_argument("--detY", default=500)
 p.add_argument("--N", default=1000)
 args = p.parse_args()
 
@@ -29,9 +29,9 @@ det.detector_offset(xd_off, yd_off)
 sam = Sample(20, 0.75)
 N = int(args.N)
 
+
 if rank == 0:
     from snippets import generate_photon_statistics
-
     batchSize = size - 1
     numPixels = det.xdim * det.ydim
     arraySize, rest = numPixels / batchSize, numPixels % batchSize
@@ -43,13 +43,11 @@ if rank == 0:
 
     recieveCount = len(ranges)
 
-
     def storeData(data):
         global output, recieveCount
         pixelRange, intensities = data
         output[pixelRange[0]:sum(pixelRange)] += intensities
         recieveCount -= 1
-
 
     slit_x, cdf_x = generate_photon_statistics('./slit_scan/slit_05x05_00001.fio', 1.1, True)
     slit_y, cdf_y = generate_photon_statistics('./slit_scan/slit_05x05_00002.fio', 2.3, True)
@@ -85,28 +83,24 @@ else:
     # Handshake with master, ask for pixel range
     comm.send(rank, dest=0)
     # Receive pixel range to count on
-    input = comm.recv(source=0)
-
-
+    input  = comm.recv(source=0)
     # If output is not pixel range, exit
 
     def calculateIntensity(input):
         i, j = input
         intensity = []
-
-        # xB, yB, zB = sam.generate_random_points_within_sample(N * j, slit_x, cdf_x, slit_y, cdf_y)
         a = time.time()
+        xB, yB, zB = sam.generate_random_points_within_sample(N * j, slit_x, cdf_x, slit_y, cdf_y)
+
         for index, detPixel in enumerate(range(i, i + j)):
             row, column = detPixel / det.xdim, detPixel % det.xdim
-            xB, yB, zB = sam.generate_random_points_within_sample(N, slit_x, cdf_x, slit_y, cdf_y)
             xD, yD, zD = det.generate_random_points_within_pixel(N, row, column)
-            beam_path = beam_path_within_sample(sam, xB, yB, zB, xD, yD, zD)
-            # beam_path = beam_path_within_sample(sam, xB[N * index:(index + 1) * N], yB[N * index:(index + 1) * N],
-            #                                     zB[N * index:(index + 1) * N], xD, yD, zD)
+            beam_path = beam_path_within_sample(sam, xB[N * index:(index + 1) * N], yB[N * index:(index + 1) * N],
+                                                zB[N * index:(index + 1) * N], xD, yD, zD)
             intensity.append(np.mean(np.exp(-beam_path / sam.mu)))
+
         print(time.time() - a)
         return intensity
-
 
     if input is not False:
         pixelRange, (slit_x, cdf_x, slit_y, cdf_y) = input
