@@ -51,7 +51,8 @@ if rank == 0:
 
     slit_x, cdf_x = generate_photon_statistics('./slit_scan/slit_05x05_00001.fio', 1.1, True)
     slit_y, cdf_y = generate_photon_statistics('./slit_scan/slit_05x05_00002.fio', 2.3, True)
-    pack = (slit_x, cdf_x, slit_y, cdf_y)
+    zD = np.ones([1, N], dtype=np.float32) * det.SDD
+    pack = (slit_x, cdf_x, slit_y, cdf_y, zD)
 
     while len(ranges) != 0:
         dest = comm.recv(source=MPI.ANY_SOURCE)
@@ -70,14 +71,14 @@ if rank == 0:
     det.data = np.reshape(output, [det.xdim, det.ydim])
     det.save_output(sam, N)
 
-    # import matplotlib.pyplot as plt
-    # from mpl_toolkits.mplot3d import Axes3D, axes3d
-    # from scipy import ndimage
-    # Z2 = ndimage.gaussian_filter(1 / det.data, sigma=20, order=0)
-    # fig = plt.figure()
-    # ax = fig.add_subplot(1, 1, 1, projection='3d')
-    # cset = ax.plot_surface(det.xd, det.yd, Z2, cmap='jet')
-    # plt.show()
+    import matplotlib.pyplot as plt
+    from mpl_toolkits.mplot3d import Axes3D, axes3d
+    from scipy import ndimage
+    Z2 = ndimage.gaussian_filter(1 / det.data, sigma=20, order=0)
+    fig = plt.figure()
+    ax = fig.add_subplot(1, 1, 1, projection='3d')
+    cset = ax.plot_surface(det.xd, det.yd, Z2, cmap='jet')
+    plt.show()
 else:
     import time
     # Handshake with master, ask for pixel range
@@ -87,14 +88,13 @@ else:
     # If output is not pixel range, exit
     a = time.time()
 
-    def calculateIntensity(input):
+    def calculateIntensity(input, zD):
         i, j = input
         intensity = []
         a = time.time()
 
         randomPoints = np.random.rand(N * j * 2) * det.pixel_size
         randomPointsOffset = 0
-        zD = np.ones([1, N], dtype=np.float32) * det.SDD
 
         xB, yB, zB = sam.generate_random_points_within_sample(N * j, slit_x, cdf_x, slit_y, cdf_y)
 
@@ -111,7 +111,7 @@ else:
         return intensity
 
     if input is not False:
-        pixelRange, (slit_x, cdf_x, slit_y, cdf_y) = input
-        output = calculateIntensity(pixelRange)
+        pixelRange, (slit_x, cdf_x, slit_y, cdf_y, zD) = input
+        output = calculateIntensity(pixelRange, zD)
         # Send computed pixel intensities
         comm.send((pixelRange, output), dest=0)
