@@ -6,7 +6,7 @@ from bmg_raytrace import Detector
 
 if __name__ == '__main__':
     p = argparse.ArgumentParser()
-    p.add_argument("--image", default="AbsCor_2048x2048px_374.836000mm_2018-06-15_14-33-39.edf")
+    p.add_argument("--image", default="AbsCor_2048x2048px_374.836000mm_2018-06-19_14-47-18.edf")
     args = p.parse_args()
 
     output = fabio.openimage.openimage(args.image)
