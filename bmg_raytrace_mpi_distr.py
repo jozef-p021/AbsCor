@@ -91,11 +91,10 @@ else:
     def calculateIntensity(input, zD):
         i, j = input
         intensity = []
-        a = time.time()
+        # a = time.time()
 
         randomPoints = np.random.rand(N * j * 2) * det.pixel_size
         randomPointsOffset = 0
-
         xB, yB, zB = sam.generate_random_points_within_sample(N * j, slit_x, cdf_x, slit_y, cdf_y)
 
         for index, detPixel in enumerate(range(i, i + j)):
@@ -107,7 +106,7 @@ else:
                                                 zB[N * index:(index + 1) * N], xD, yD, zD)
             intensity.append(np.mean(np.exp(-beam_path / sam.mu)))
 
-        print(time.time() - a)
+        # print(time.time() - a)
         return intensity
 
     if input is not False:

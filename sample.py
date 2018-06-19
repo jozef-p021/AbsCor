@@ -69,7 +69,7 @@ class Sample:
             if len(xn) >= N:
                 break
             else:
-                genN = int((N - len(xn)) * 1.4)
+                genN = int((N - len(xn)) * 1.07)
         return xn[:N], yn[:N], zn[:N]
 
     def generate_normal_points_within_sample(self, N):
