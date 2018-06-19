@@ -85,16 +85,24 @@ else:
     # Receive pixel range to count on
     input  = comm.recv(source=0)
     # If output is not pixel range, exit
+    a = time.time()
 
     def calculateIntensity(input):
         i, j = input
         intensity = []
         a = time.time()
+
+        randomPoints = np.random.rand(N * j * 2) * det.pixel_size
+        randomPointsOffset = 0
+        zD = np.ones([1, N], dtype=np.float32) * det.SDD
+
         xB, yB, zB = sam.generate_random_points_within_sample(N * j, slit_x, cdf_x, slit_y, cdf_y)
 
         for index, detPixel in enumerate(range(i, i + j)):
             row, column = detPixel / det.xdim, detPixel % det.xdim
-            xD, yD, zD = det.generate_random_points_within_pixel(N, row, column)
+            xD, randomPointsOffset = det.xd[row, column] + randomPoints[randomPointsOffset*N:randomPointsOffset*N + N], randomPointsOffset + 1
+            yD, randomPointsOffset = det.yd[row, column] + randomPoints[randomPointsOffset*N:randomPointsOffset*N + N], randomPointsOffset + 1
+
             beam_path = beam_path_within_sample(sam, xB[N * index:(index + 1) * N], yB[N * index:(index + 1) * N],
                                                 zB[N * index:(index + 1) * N], xD, yD, zD)
             intensity.append(np.mean(np.exp(-beam_path / sam.mu)))
