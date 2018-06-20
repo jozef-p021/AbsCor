@@ -18,15 +18,21 @@ name = MPI.Get_processor_name()
 p = argparse.ArgumentParser()
 p.add_argument("--detX", default=500)
 p.add_argument("--detY", default=500)
+p.add_argument("--detOffsetX", default=-1028.607)
+p.add_argument("--detOffsetY", default=-1016.952)
+p.add_argument("--sdd", default=374.836)
+p.add_argument("--samLength", default=20)
+p.add_argument("--samRadius", default=0.75)
 p.add_argument("--N", default=1000)
+p.add_argument("--o", default=None)
 args = p.parse_args()
 
 det = Detector(int(args.detX), int(args.detY))
-det.SDD = 374.836
-xd_off = -1028.607
-yd_off = -1016.952
+det.SDD = float(args.sdd)
+xd_off = float(args.detOffsetX)
+yd_off = float(args.detOffsetY)
 det.detector_offset(xd_off, yd_off)
-sam = Sample(20, 0.75)
+sam = Sample(float(args.samLength), float(args.samRadius))
 N = int(args.N)
 
 if rank == 0:
@@ -71,7 +77,7 @@ if rank == 0:
             comm.isend(False, dest=data)
 
     det.data = np.reshape(output, [det.xdim, det.ydim])
-    det.save_output(sam, N)
+    det.save_output(sam, N, fileName=args.o)
 
     # import matplotlib.pyplot as plt
     # from mpl_toolkits.mplot3d import Axes3D, axes3d
