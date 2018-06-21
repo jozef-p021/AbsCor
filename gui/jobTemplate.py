@@ -49,6 +49,8 @@ class Ui_Form(object):
         self.jobPlotFrame.setFrameShadow(QtGui.QFrame.Raised)
         self.jobPlotFrame.setObjectName(_fromUtf8("jobPlotFrame"))
         self.gridLayout_3 = QtGui.QGridLayout(self.jobPlotFrame)
+        self.gridLayout_3.setMargin(0)
+        self.gridLayout_3.setSpacing(0)
         self.gridLayout_3.setObjectName(_fromUtf8("gridLayout_3"))
         self.gridLayout.addWidget(self.jobPlotFrame, 2, 0, 1, 2)
         self.jobProgressWidget = QtGui.QWidget(Form)

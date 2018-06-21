@@ -58,7 +58,7 @@ class MainWidget(QWidget, Ui_Form):
         self.setDetectorPreset(0)
         self.setSamplePreset(0)
         self.setSimulationPreset(0)
-
+        self.simulationNodesInput.setDisabled(True)
         self.showJobGroup(False)
 
     def uiFinishWait(self):
@@ -117,6 +117,18 @@ class MainWidget(QWidget, Ui_Form):
         jobWidget.sigJobStatusChanged.connect(
             lambda status, jobIndex=self.jobCount: self.setJobStatus(status, jobIndex))
         jobWidget.sigStartJob.emit()
+
+    @pyqtSlot(bool)
+    def setLocalJob(self, flag):
+        if not flag: return
+
+        self.simulationNodesInput.setDisabled(True)
+
+    @pyqtSlot(bool)
+    def setRemoteJob(self, flag):
+        if not flag: return
+
+        self.simulationNodesInput.setDisabled(False)
 
     def setJobStatus(self, status, jobIndex):
         jobWidget = self.jobs[jobIndex]

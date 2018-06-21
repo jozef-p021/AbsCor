@@ -915,6 +915,38 @@ background-color:#f6b442;
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>jobLocalRadio</sender>
+   <signal>clicked(bool)</signal>
+   <receiver>Form</receiver>
+   <slot>setLocalJob(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>55</x>
+     <y>445</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>-32</x>
+     <y>442</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>jobMaxRadio</sender>
+   <signal>clicked(bool)</signal>
+   <receiver>Form</receiver>
+   <slot>setRemoteJob(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>118</x>
+     <y>437</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>-42</x>
+     <y>472</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>startJob()</slot>
@@ -922,5 +954,7 @@ background-color:#f6b442;
   <slot>setDetectorPreset(int)</slot>
   <slot>setSamplePreset(int)</slot>
   <slot>setSimulationPreset(int)</slot>
+  <slot>setLocalJob(bool)</slot>
+  <slot>setRemoteJob(bool)</slot>
  </slots>
 </ui>

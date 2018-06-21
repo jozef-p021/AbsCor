@@ -160,4 +160,6 @@ class JobWidget(QWidget, Ui_Form):
         ax = fig.add_subplot(1, 1, 1, projection=u'3d')
         ax.plot_surface(det.xd, det.yd, output.data, cmap=u'jet')
         self.jobPlotFrame.layout().addWidget(canvas)
+        fig.subplots_adjust(left=0, bottom=0, right=0.1, top=0.1)
+        fig.tight_layout(pad=0.5)
         canvas.draw()

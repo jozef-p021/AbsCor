@@ -462,6 +462,8 @@ class Ui_Form(object):
         QtCore.QObject.connect(self.detectorPresetSelect, QtCore.SIGNAL(_fromUtf8("activated(int)")), Form.setDetectorPreset)
         QtCore.QObject.connect(self.samplePresetSelect, QtCore.SIGNAL(_fromUtf8("currentIndexChanged(int)")), Form.setSamplePreset)
         QtCore.QObject.connect(self.simulationPresetSelect, QtCore.SIGNAL(_fromUtf8("currentIndexChanged(int)")), Form.setSimulationPreset)
+        QtCore.QObject.connect(self.jobLocalRadio, QtCore.SIGNAL(_fromUtf8("clicked(bool)")), Form.setLocalJob)
+        QtCore.QObject.connect(self.jobMaxRadio, QtCore.SIGNAL(_fromUtf8("clicked(bool)")), Form.setRemoteJob)
         QtCore.QMetaObject.connectSlotsByName(Form)
         Form.setTabOrder(self.detectorPresetSelect, self.detectorWidthInput)
         Form.setTabOrder(self.detectorWidthInput, self.detectorHeightInput)

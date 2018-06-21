@@ -57,7 +57,14 @@
      <property name="frameShadow">
       <enum>QFrame::Raised</enum>
      </property>
-     <layout class="QGridLayout" name="gridLayout_3"/>
+     <layout class="QGridLayout" name="gridLayout_3">
+      <property name="margin">
+       <number>0</number>
+      </property>
+      <property name="spacing">
+       <number>0</number>
+      </property>
+     </layout>
     </widget>
    </item>
    <item row="0" column="0" colspan="2">
@@ -168,7 +175,7 @@
      <y>26</y>
     </hint>
     <hint type="destinationlabel">
-     <x>737</x>
+     <x>425</x>
      <y>29</y>
     </hint>
    </hints>
@@ -180,12 +187,12 @@
    <slot>closeJob()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>432</x>
-     <y>432</y>
+     <x>419</x>
+     <y>200</y>
     </hint>
     <hint type="destinationlabel">
-     <x>437</x>
-     <y>476</y>
+     <x>425</x>
+     <y>206</y>
     </hint>
    </hints>
   </connection>
