@@ -35,7 +35,7 @@ class JobWidget(QWidget, Ui_Form):
 
     def __init__(self, jobParams, parent=None):
         super(JobWidget, self).__init__(parent)
-        self.logger = logging.getLogger("Gui")
+        self.logger = logging.getLogger(u"Gui")
         self.jobParams = jobParams
         self.jobTimeCounter = QTimer()
         self.jobTimeCounter.timeout.connect(self.jobTimerTick)
@@ -68,14 +68,14 @@ class JobWidget(QWidget, Ui_Form):
 
             if self.localJobProc.wait() != 0:
                 self.logger.debug(u"Local job finished with error")
-                self.sigJobStatusChanged.emit("Error")
+                self.sigJobStatusChanged.emit("E")
             else:
                 self.logger.debug(u"Local job successfully finished")
-                self.sigJobStatusChanged.emit("Finished")
+                self.sigJobStatusChanged.emit(u"F")
 
         except Exception as e:
             self.logger.error(u"Exception: {0}".format(e))
-            self.sigJobStatusChanged.emit("Error")
+            self.sigJobStatusChanged.emit(u"E")
         finally:
             self.sigFinishJob.emit()
 
@@ -105,13 +105,13 @@ class JobWidget(QWidget, Ui_Form):
 
         if self.runningJob[0] == JOB_LOCAL:
             self._cancelLocalJob()
-            self.sigJobStatusChanged.emit("Cancelled")
+            self.sigJobStatusChanged.emit(u"C")
 
     @pyqtSlot()
     def closeJob(self):
         if self.runningJob is not None:
             message = QMessageBox()
-            ret = message.question(self, '', "Job is still running, do You want to cancel it?", message.Yes | message.No)
+            ret = message.question(self, u'', u"Job is still running, do You want to cancel it?", message.Yes | message.No)
             if ret == message.No:
                 return
             else:
@@ -131,7 +131,7 @@ class JobWidget(QWidget, Ui_Form):
 
     def startJob(self):
         Thread(target=self._startLocalJob).start()
-        self.sigJobStatusChanged.emit("Running")
+        self.sigJobStatusChanged.emit(u"R")
         self.jobTimeCounter.setInterval(1000)
         self.jobCancelCountDown = self.jobParams[PARAM_SIM_MAX_RUNNING_TIME] * 60 + 1
         self.jobTimerTick()
@@ -157,7 +157,7 @@ class JobWidget(QWidget, Ui_Form):
 
         fig = plt.figure()
         canvas = FigureCanvas(fig)
-        ax = fig.add_subplot(1, 1, 1, projection='3d')
-        ax.plot_surface(det.xd, det.yd, output.data, cmap='jet')
+        ax = fig.add_subplot(1, 1, 1, projection=u'3d')
+        ax.plot_surface(det.xd, det.yd, output.data, cmap=u'jet')
         self.jobPlotFrame.layout().addWidget(canvas)
         canvas.draw()

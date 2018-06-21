@@ -1,0 +1,38 @@
+<?xml version="1.0" ?>
+<!DOCTYPE config [<!ATTLIST controller id ID #IMPLIED>
+					  <!ATTLIST attribute id ID #IMPLIED>
+					  <!ATTLIST meta id ID #IMPLIED>]>
+<config>
+    <job>
+        <remote host="max-cfel">
+            <user type="string">domarm</user>
+            <password type="string">Anime@KE.</password>
+            <repo type="string">/home/domarm/jobs/scripts/AbsCor</repo>
+        </remote>
+    </job>
+    <presets>
+        <detector label="Lambda">
+            <attribute name="Width" type="int">2048</attribute>
+            <attribute name="Height" type="int">2048</attribute>
+            <attribute name="Offset X" type="float">-1028.607</attribute>
+            <attribute name="Offset Y" type="float">-1016.952</attribute>
+        </detector>
+        <detector label="Drobcek">
+            <attribute name="Width" type="int">50</attribute>
+            <attribute name="Height" type="int">50</attribute>
+            <attribute name="Offset X" type="float">-1028.607</attribute>
+            <attribute name="Offset Y" type="float">-1016.952</attribute>
+        </detector>
+        <sample label="Sample 1">
+            <attribute name="Length" type="float">20</attribute>
+            <attribute name="Radius" type="float">0.75</attribute>
+        </sample>
+        <simulation label="Default">
+            <attribute name="Photons" type="int">1000</attribute>
+            <attribute name="SDD" type="float">374.836</attribute>
+            <attribute name="Nodes" type="int">1</attribute>
+            <attribute name="Processes" type="int">8</attribute>
+            <attribute name="Max. runtime" type="int">10</attribute>
+        </simulation>
+    </presets>
+</config>

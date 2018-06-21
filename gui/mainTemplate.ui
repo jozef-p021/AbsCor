@@ -90,11 +90,6 @@ background-color:#f6b442;
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
-        <item>
-         <property name="text">
-          <string>Custom</string>
-         </property>
-        </item>
        </widget>
       </item>
       <item row="2" column="0" colspan="2">
@@ -314,11 +309,6 @@ background-color:#f6b442;
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
-        <item>
-         <property name="text">
-          <string>Custom</string>
-         </property>
-        </item>
        </widget>
       </item>
       <item row="1" column="0" colspan="2">
@@ -832,11 +822,6 @@ background-color:#f6b442;
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
-        <item>
-         <property name="text">
-          <string>Custom</string>
-         </property>
-        </item>
        </widget>
       </item>
      </layout>
@@ -844,6 +829,26 @@ background-color:#f6b442;
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>detectorPresetSelect</tabstop>
+  <tabstop>detectorWidthInput</tabstop>
+  <tabstop>detectorHeightInput</tabstop>
+  <tabstop>detectorOffsetXInput</tabstop>
+  <tabstop>detectorOffsetYInput</tabstop>
+  <tabstop>samplePresetSelect</tabstop>
+  <tabstop>sampleLengthInput</tabstop>
+  <tabstop>sampleRadiusInput</tabstop>
+  <tabstop>simulationPresetSelect</tabstop>
+  <tabstop>simulationPhotonsInput</tabstop>
+  <tabstop>sampleSddhInput</tabstop>
+  <tabstop>simulationNodesInput</tabstop>
+  <tabstop>simulationProcessesInput</tabstop>
+  <tabstop>simulationRunningTimeInput</tabstop>
+  <tabstop>jobLocalRadio</tabstop>
+  <tabstop>jobMaxRadio</tabstop>
+  <tabstop>pushButton</tabstop>
+  <tabstop>jobTabs</tabstop>
+ </tabstops>
  <resources/>
  <connections>
   <connection>
@@ -858,7 +863,55 @@ background-color:#f6b442;
     </hint>
     <hint type="destinationlabel">
      <x>432</x>
-     <y>577</y>
+     <y>570</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>detectorPresetSelect</sender>
+   <signal>activated(int)</signal>
+   <receiver>Form</receiver>
+   <slot>setDetectorPreset(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>110</x>
+     <y>37</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>-98</x>
+     <y>40</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>samplePresetSelect</sender>
+   <signal>currentIndexChanged(int)</signal>
+   <receiver>Form</receiver>
+   <slot>setSamplePreset(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>177</x>
+     <y>177</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>-77</x>
+     <y>180</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>simulationPresetSelect</sender>
+   <signal>currentIndexChanged(int)</signal>
+   <receiver>Form</receiver>
+   <slot>setSimulationPreset(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>84</x>
+     <y>271</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>-60</x>
+     <y>277</y>
     </hint>
    </hints>
   </connection>
@@ -866,5 +919,8 @@ background-color:#f6b442;
  <slots>
   <slot>startJob()</slot>
   <slot>cancelJob()</slot>
+  <slot>setDetectorPreset(int)</slot>
+  <slot>setSamplePreset(int)</slot>
+  <slot>setSimulationPreset(int)</slot>
  </slots>
 </ui>

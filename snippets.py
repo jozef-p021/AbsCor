@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
 import datetime
+import json
+from collections import OrderedDict
+from xml.dom import Node
+
 import numpy as np
 
 
@@ -66,3 +70,67 @@ def getScaledTimeHumanReadable(seconds):
         humanReadableEstimate = "%d Year %d Month %d Day" % (d.year, d.month, d.day - 1)
 
     return humanReadableEstimate
+
+
+from xml.dom.minidom import Node, parse
+
+
+def parseXMLTags(attributes, out=None, tagFilter=["attribute"], nodePairs=None, getAttributesInfo=False):
+    if out is None: out = OrderedDict()
+    for attribute in attributes:
+        if attribute.nodeType == Node.COMMENT_NODE: continue
+        tagName = attribute.tagName
+        if tagName not in tagFilter: continue
+        attributeName = attribute.getAttribute("name")
+        attributeType = attribute.getAttribute("type").lower()
+        attributeValue = attribute.firstChild
+        if nodePairs is not None: nodePairs[attributeName] = attribute.firstChild
+
+        if attributeValue is None:
+            nodeType = None
+        else:
+            nodeType = attributeValue.nodeType
+
+        if nodeType == Node.TEXT_NODE:
+            attributeValue = attributeValue.nodeValue
+            if attributeValue == "None":
+                attributeValue = None
+            elif attributeType in ("int", "integer"):
+                attributeValue = int(attributeValue)
+            elif attributeType in ("float", "decimal"):
+                attributeValue = float(attributeValue)
+            elif attributeType in ("bool", "boolean"):
+                if attributeValue in ("False", 0):
+                    attributeValue = False
+                else:
+                    attributeValue = True
+            elif attributeType == "json":
+                attributeValue = json.loads(attributeValue)
+            else:
+                if attributeValue == "None":
+                    attributeValue = None
+                else:
+                    attributeValue = unicode(attributeValue)
+
+
+            out[attributeName] = attributeValue
+        elif nodeType == Node.ELEMENT_NODE:
+            out[attributeName] = parseXMLTags(attribute.childNodes, tagFilter=tagFilter,
+                                              getAttributesInfo=getAttributesInfo)
+        elif nodeType is None:
+            out[attributeName] = None
+    return out
+
+def removeXMLBlanks(node):
+    for x in node.childNodes:
+        if x.nodeType == Node.TEXT_NODE:
+            if x.nodeValue:
+                x.nodeValue = x.nodeValue.strip()
+        elif x.nodeType == Node.ELEMENT_NODE:
+            removeXMLBlanks(x)
+
+def parseXMLFile(filePath):
+    parsedXML = parse(filePath)
+    removeXMLBlanks(parsedXML)
+    parsedXML.normalize()
+    return parsedXML
