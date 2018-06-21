@@ -57,7 +57,7 @@ class Sample:
         xn = np.array([], dtype=np.float32)
         yn = np.array([], dtype=np.float32)
         zn = np.array([], dtype=np.float32)
-        genN = N
+        genN = int(N *1.05)
         while True:
             x = np.interp(np.random.rand(genN), cdf_x, slit_x)
             y = np.interp(np.random.rand(genN), cdf_y, slit_y)
@@ -69,7 +69,8 @@ class Sample:
             if len(xn) >= N:
                 break
             else:
-                genN = int((N - len(xn)) * 1.07)
+                print("now")
+                genN = int((N - len(xn)) * 1.05)
         return xn[:N], yn[:N], zn[:N]
 
     def generate_normal_points_within_sample(self, N):

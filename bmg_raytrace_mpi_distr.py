@@ -16,8 +16,8 @@ rank = comm.Get_rank()
 name = MPI.Get_processor_name()
 
 p = argparse.ArgumentParser()
-p.add_argument("--detX", default=500)
-p.add_argument("--detY", default=500)
+p.add_argument("--detX", default=50)
+p.add_argument("--detY", default=50)
 p.add_argument("--detOffsetX", default=-1028.607)
 p.add_argument("--detOffsetY", default=-1016.952)
 p.add_argument("--sdd", default=374.836)
@@ -59,14 +59,13 @@ if rank == 0:
 
     slit_x, cdf_x = generate_photon_statistics('./slit_scan/slit_05x05_00001.fio', 1.1, True)
     slit_y, cdf_y = generate_photon_statistics('./slit_scan/slit_05x05_00002.fio', 2.3, True)
-    zD = np.ones([1, N], dtype=np.float32) * det.SDD
 
     while len(ranges) != 0:
         dest = comm.recv(source=MPI.ANY_SOURCE)
         if isinstance(dest, tuple):
             storeData(dest)
         else:
-            pack = (ranges.pop(0), slit_x, cdf_x, slit_y, cdf_y, zD)
+            pack = (ranges.pop(0), slit_x, cdf_x, slit_y, cdf_y)
             comm.isend(pack, dest=dest)
 
     while recieveCount != 0:
@@ -78,52 +77,28 @@ if rank == 0:
 
     det.data = np.reshape(output, [det.xdim, det.ydim])
     det.save_output(sam, N, fileName=args.o)
-
-    # import matplotlib.pyplot as plt
-    # from mpl_toolkits.mplot3d import Axes3D, axes3d
-    # from scipy import ndimage
-    # Z2 = ndimage.gaussian_filter(1 / det.data, sigma=20, order=0)
-    # fig = plt.figure()
-    # ax = fig.add_subplot(1, 1, 1, projection='3d')
-    # cset = ax.plot_surface(det.xd, det.yd, Z2, cmap='jet')
-    # plt.show()
 else:
-    import time
-
     # Handshake with master, ask for pixel range
     comm.send(rank, dest=0)
     # Receive pixel range to count on
     input = comm.recv(source=0)
+
+
     # If output is not pixel range, exit
-    a = time.time()
 
-
-    def calculateIntensity(input, zD):
+    def calculateIntensity(input):
         i, j = input
         intensity = []
-        a = time.time()
-
-        randomPoints = np.random.rand(N * j * 2) * det.pixel_size
-        randomPointsOffset = 0
-        xB, yB, zB = sam.generate_random_points_within_sample(N * j, slit_x, cdf_x, slit_y, cdf_y)
-
-        for index, detPixel in enumerate(range(i, i + j)):
+        for detPixel in range(i, i + j):
             row, column = detPixel / det.xdim, detPixel % det.xdim
-            xD, randomPointsOffset = det.xd[row, column] + randomPoints[
-                                                           randomPointsOffset * N:randomPointsOffset * N + N], randomPointsOffset + 1
-            yD, randomPointsOffset = det.yd[row, column] + randomPoints[
-                                                           randomPointsOffset * N:randomPointsOffset * N + N], randomPointsOffset + 1
-
-            rS, rE = N * index, (index + 1) * N
-            beam_path = beam_path_within_sample(sam, xB[rS:rE], yB[rS:rE], zB[rS:rE], xD, yD, zD)
+            xB, yB, zB = sam.generate_random_points_within_sample(N, slit_x, cdf_x, slit_y, cdf_y)
+            xD, yD, zD = det.generate_random_points_within_pixel(N, row, column)
+            beam_path = beam_path_within_sample(sam, xB, yB, zB, xD, yD, zD)
             intensity.append(np.mean(np.exp(-beam_path / sam.mu)))
-
-        print(time.time() - a)
         return intensity
 
 
     if input is not False:
-        pixelRange, slit_x, cdf_x, slit_y, cdf_y, zD = input
-        output = calculateIntensity(pixelRange, zD)
-        # Send computed pixel intensities
+        pixelRange, slit_x, cdf_x, slit_y, cdf_y = input
+        output = calculateIntensity(pixelRange)
         comm.send((pixelRange, output), dest=0)

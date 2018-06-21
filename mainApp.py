@@ -2,12 +2,10 @@
 from __future__ import print_function
 
 import logging
-import os
 import sys
-import time
 from multiprocessing import cpu_count
 
-from PyQt4.QtCore import pyqtSlot, pyqtSignal
+from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtGui import QWidget, QApplication, QMainWindow
 
 from AbsCor import JOB_LOCAL, PARAM_DET_X, PARAM_DET_Y, \
@@ -15,8 +13,6 @@ from AbsCor import JOB_LOCAL, PARAM_DET_X, PARAM_DET_Y, \
     PARAM_SIM_SDD, PARAM_SIM_PHOTONS, PARAM_SIM_MAX_RUNNING_TIME, PARAM_SIM_NODES, \
     PARAM_SIM_PROCESSES
 from AbsCor.gui.mainTemplate import Ui_Form
-from bmg_raytrace import Detector
-from detector import Detector
 from jobWidget import JobWidget
 
 
@@ -59,24 +55,24 @@ class MainWidget(QWidget, Ui_Form):
     def startJob(self):
         self.jobCount += 1
         jobWidget = JobWidget(self.getParams())
-        tabIndex = self.jobTabs.addTab(jobWidget, u"Job {0}".format(self.jobCount))
-        self.jobs[self.jobCount] = (jobWidget, tabIndex)
+        tabIndex = self.jobTabs.addTab(jobWidget, u"Job {0} [Init]".format(self.jobCount))
+        self.jobs[self.jobCount] = jobWidget
         self.showJobGroup(True)
         self.jobTabs.setCurrentIndex(tabIndex)
         jobWidget.sigCloseJob.connect(lambda jobIndex=self.jobCount: self.closeJob(jobIndex))
+        jobWidget.sigJobStatusChanged.connect(lambda status, jobIndex=self.jobCount: self.setJobStatus(status, jobIndex))
         jobWidget.sigStartJob.emit()
 
+    def setJobStatus(self, status, jobIndex):
+        jobWidget = self.jobs[jobIndex]
+        tabIndex = self.jobTabs.indexOf(jobWidget)
+        self.jobTabs.setTabText(tabIndex, u"Job {0} [{1}]".format(jobIndex, status))
+
+
     def closeJob(self, jobIndex):
-        _, tabIndex = self.jobs[jobIndex]
-        self.jobTabs.removeTab(self.jobTabs.currentIndex())
+        jobWidget = self.jobs[jobIndex]
+        self.jobTabs.removeTab(self.jobTabs.indexOf(jobWidget))
         del self.jobs[jobIndex]
-
-    @pyqtSlot()
-    def cancelJob(self):
-        if self.runningJob is None: return
-
-        if self.runningJob[0] == JOB_LOCAL:
-            self._cancelLocalJob()
 
     def getParams(self):
         return {

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import datetime
 import numpy as np
 
 
@@ -41,3 +42,27 @@ def beam_path_within_sample(sam, xB, yB, zB, xD, yD, zD):
     # k2 = -b/(2*a) - pom
     [path_out] = np.abs(k1) * path_out
     return path_in + path_out
+
+def getScaledTimeHumanReadable(seconds):
+    if seconds < 0: return
+
+    d = datetime.datetime(1, 1, 1) + datetime.timedelta(seconds=seconds)
+
+    if seconds < 60:
+        msec = int(d.microsecond / 1000)
+        if msec > 0:
+            humanReadableEstimate = "%d Sec %d MSec" % (d.second, msec)
+        else:
+            humanReadableEstimate = "%d Sec" % (d.second)
+    elif 60 <= seconds < 3600:
+        humanReadableEstimate = "%d Min %d Sec" % (d.minute, d.second)
+    elif 3600 <= seconds < 24 * 3600:
+        humanReadableEstimate = "%d Hour %d Min" % (d.hour, d.minute)
+    elif 24 * 3600 <= seconds < 24 * 3600 * 28:
+        humanReadableEstimate = "%d Day %d Hour %d Min" % (d.day - 1, d.hour, d.minute)
+    elif 24 * 3600 * 28 <= seconds < 24 * 3600 * 28 * 12:
+        humanReadableEstimate = "%d Month %d Day %d Hour" % (d.month, d.day - 1, d.hour)
+    else:
+        humanReadableEstimate = "%d Year %d Month %d Day" % (d.year, d.month, d.day - 1)
+
+    return humanReadableEstimate
