@@ -4,10 +4,28 @@
 					  <!ATTLIST meta id ID #IMPLIED>]>
 <config>
     <job>
-        <remote host="max-cfel">
-            <user type="string">domarm</user>
-            <password type="string">Anime@KE.</password>
-            <repo type="string">/home/domarm/jobs/scripts/AbsCor</repo>
+        <remote>
+            <attribute name="host" type="string">max-cfel</attribute>
+            <attribute name="user" type="string">domarm</attribute>
+            <attribute name="pass" type="string">Anime@KE.</attribute>
+            <attribute name="repo" type="string">/home/domarm/jobs/scripts/AbsCor</attribute>
+            <attribute name="template" type="string">
+#!/bin/bash
+
+#SBATCH --partition=cfel
+#SBATCH --time=10:00:00             # Maximum time request
+#SBATCH --nodes={PARAM_SIM_NODES}                       # Number of nodes
+#SBATCH --workdir   {PARAM_REMOTE_WORKING_DIR}
+#SBATCH --job-name  simulation
+#SBATCH --output    hostname-%N-%j.out  # File to which STDOUT will be written
+#SBATCH --error     hostname-%N-%j.err  # File to which STDERR will be written
+#SBATCH --mail-type END                 # Type of email notification- BEGIN,END,FAIL,ALL
+#SBATCH --mail-user martin.domaracky@desy.de  # Email to which notifications will be sent
+
+source /gpfs/cfel/cxi/common/cfelsoft-rh7/setup.sh
+module load cfel-python2/latest
+{PARAM_JOB_COMMAND}
+            </attribute>
         </remote>
     </job>
     <presets>

@@ -11,20 +11,17 @@ from PyQt4.QtGui import QWidget, QApplication, QMainWindow
 from AbsCor import PARAM_DET_X, PARAM_DET_Y, \
     PARAM_DET_OFFSET_X, PARAM_DET_OFFSET_Y, PARAM_SAM_LENGHT, PARAM_SAM_RADIUS, \
     PARAM_SIM_SDD, PARAM_SIM_PHOTONS, PARAM_SIM_MAX_RUNNING_TIME, PARAM_SIM_NODES, \
-    PARAM_SIM_PROCESSES
+    PARAM_SIM_PROCESSES, PRESET_DETECTOR, PRESET_SAMPLE, PRESET_SIMULATION, PARAM_JOB_TYPE, JOB_LOCAL, JOB_REMOTE, \
+    PARAM_REMOTE_JOB_CONFIG
 from AbsCor.gui.mainTemplate import Ui_Form
 from jobWidget import JobWidget
 from snippets import parseXMLFile, parseXMLTags
 
-PRESET_DETECTOR = u"detector"
-PRESET_SAMPLE = u"sample"
-PRESET_SIMULATION = u"simulation"
-
 
 class MainWidget(QWidget, Ui_Form):
-    localJobProc = None
     jobCount = 0
     xmlConfigFile = None
+    remoteJobConfig = None
 
     def __init__(self, xmlConfigFile=None, parent=None):
         super(MainWidget, self).__init__(parent)
@@ -73,6 +70,9 @@ class MainWidget(QWidget, Ui_Form):
             for detectorPreset in detectorPresets:
                 label = detectorPreset.getAttribute("label")
                 self.presets[presetGroup].append((label, parseXMLTags(detectorPreset.childNodes)))
+
+        jobConfig = config.getElementsByTagName("remote")[0]
+        self.remoteJobConfig = parseXMLTags(jobConfig.childNodes)
 
     def showJobGroup(self, flag=True):
         if flag:
@@ -131,9 +131,10 @@ class MainWidget(QWidget, Ui_Form):
         self.simulationNodesInput.setDisabled(False)
 
     def setJobStatus(self, status, jobIndex):
-        jobWidget = self.jobs[jobIndex]
-        tabIndex = self.jobTabs.indexOf(jobWidget)
-        self.jobTabs.setTabText(tabIndex, u"Job {0} [ {1} ]".format(jobIndex, status))
+        jobWidget = self.jobs.get(jobIndex)
+        if jobWidget is not None:
+            tabIndex = self.jobTabs.indexOf(jobWidget)
+            self.jobTabs.setTabText(tabIndex, u"Job {0} [ {1} ]".format(jobIndex, status))
 
     def closeJob(self, jobIndex):
         jobWidget = self.jobs[jobIndex]
@@ -153,6 +154,8 @@ class MainWidget(QWidget, Ui_Form):
             PARAM_SIM_NODES: int(self.simulationNodesInput.value()),
             PARAM_SIM_PROCESSES: int(self.simulationProcessesInput.value()),
             PARAM_SIM_SDD: int(self.sampleSddhInput.value()),
+            PARAM_JOB_TYPE: JOB_LOCAL if self.jobLocalRadio.isChecked() else JOB_REMOTE,
+            PARAM_REMOTE_JOB_CONFIG: self.remoteJobConfig,
         }
 
 

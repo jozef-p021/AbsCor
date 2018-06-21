@@ -3,27 +3,32 @@ from __future__ import print_function
 
 import logging
 import os
+import re
 import subprocess
+import tempfile
+import time
 from signal import SIGTERM
 from threading import Thread
 
-import time
+import fabio
+import matplotlib.pyplot as plt
 from PyQt4.QtCore import pyqtSlot, pyqtSignal, QString
 from PyQt4.QtGui import QWidget, QMessageBox
 from PySide.QtCore import QTimer
+from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 
 from AbsCor import JOB_LOCAL, PARAM_DET_X, PARAM_DET_Y, \
     PARAM_DET_OFFSET_X, PARAM_DET_OFFSET_Y, PARAM_SAM_LENGHT, PARAM_SAM_RADIUS, \
-    PARAM_SIM_SDD, PARAM_SIM_PHOTONS, PARAM_SIM_PROCESSES, PARAM_SIM_MAX_RUNNING_TIME
+    PARAM_SIM_SDD, PARAM_SIM_PHOTONS, PARAM_SIM_PROCESSES, PARAM_SIM_MAX_RUNNING_TIME, PARAM_JOB_TYPE, STATUS_INIT, \
+    STATUS_ERROR, STATUS_CANCELLED, STATUS_RUNNING, STATUS_FINISHED, PARAM_REMOTE_JOB_CONFIG, \
+    PARAM_SIM_NODES, JOB_REMOTE
 from AbsCor.gui.jobTemplate import Ui_Form
 from detector import Detector
-
-import fabio
-import matplotlib.pyplot as plt
-from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
-from mpl_toolkits.mplot3d import Axes3D, axes3d
-
 from snippets import getScaledTimeHumanReadable
+from pexpect import pxssh
+from mpl_toolkits.mplot3d import Axes3D, axes3d
+from paramiko import SSHClient
+from scp import SCPClient
 
 
 class JobWidget(QWidget, Ui_Form):
@@ -32,6 +37,9 @@ class JobWidget(QWidget, Ui_Form):
     sigStartJob = pyqtSignal()
     sigJobStatusChanged = pyqtSignal(QString)
     jobCancelCountDown = 0
+    outputFile = None
+    status = STATUS_INIT
+    remoteJobId = None
 
     def __init__(self, jobParams, parent=None):
         super(JobWidget, self).__init__(parent)
@@ -46,49 +54,117 @@ class JobWidget(QWidget, Ui_Form):
 
     def _startLocalJob(self):
         try:
-            params = self.jobParams
-            outputFile = self.getOutputName()
-            cmd = ["mpirun", "-n", params[PARAM_SIM_PROCESSES],
-                   "python", "bmg_raytrace_mpi_distr.py",
-                   "--o", outputFile,
-                   "--detX", params[PARAM_DET_X],
-                   "--detY", params[PARAM_DET_Y],
-                   "--detOffsetX", params[PARAM_DET_OFFSET_X],
-                   "--detOffsetY", params[PARAM_DET_OFFSET_Y],
-                   "--sdd", params[PARAM_SIM_SDD],
-                   "--samLength", params[PARAM_SAM_LENGHT],
-                   "--samRadius", params[PARAM_SAM_RADIUS],
-                   "--N", params[PARAM_SIM_PHOTONS],
-                   ]
-            cmd = " ".join([str(part) for part in cmd])
+            cmd = self._getMpiCommand()
             self.localJobProc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                                                  shell=True, preexec_fn=os.setsid)
+            self.status = STATUS_RUNNING
+            self.sigJobStatusChanged.emit(self.status)
+
             self.logger.debug(u"Local job started")
-            self.runningJob = (JOB_LOCAL, outputFile)
 
             if self.localJobProc.wait() != 0:
                 self.logger.debug(u"Local job finished with error")
-                self.sigJobStatusChanged.emit("E")
+                self.status = STATUS_ERROR
+                self.sigJobStatusChanged.emit(self.status)
             else:
                 self.logger.debug(u"Local job successfully finished")
-                self.sigJobStatusChanged.emit(u"F")
+                self.status = STATUS_FINISHED
+                self.sigJobStatusChanged.emit(self.status)
 
         except Exception as e:
             self.logger.error(u"Exception: {0}".format(e))
-            self.sigJobStatusChanged.emit(u"E")
+            self.status = STATUS_ERROR
+            self.sigJobStatusChanged.emit(self.status)
+        finally:
+            self.sigFinishJob.emit()
+
+    def _startRemoteJob(self):
+        try:
+            cmd = self._getMpiCommand()
+            remoteConfig = self.jobParams[PARAM_REMOTE_JOB_CONFIG]
+            remoteWorkingDir = remoteConfig[u"repo"]
+            remoteHost = remoteConfig[u"host"]
+            remoteUser = remoteConfig[u"user"]
+            remotePass = remoteConfig[u"pass"]
+
+            template = remoteConfig[u"template"]
+            template = template.replace(u"{PARAM_SIM_MAX_RUNNING_TIME}", unicode(self.jobParams[PARAM_SIM_MAX_RUNNING_TIME]))
+            template = template.replace(u"{PARAM_SIM_NODES}", unicode(self.jobParams[PARAM_SIM_NODES]))
+            template = template.replace(u"{PARAM_REMOTE_WORKING_DIR}", unicode(remoteWorkingDir))
+            template = template.replace(u"{PARAM_JOB_COMMAND}", cmd)
+
+            self.logger.debug(u"Remote job started")
+
+            fd, path = tempfile.mkstemp()
+            with os.fdopen(fd, 'w') as tmp:
+                # do stuff with temp file
+                tmp.write(template)
+
+            from paramiko import SSHClient
+            from scp import SCPClient
+            ssh = SSHClient()
+            ssh.load_system_host_keys()
+            ssh.connect(hostname=remoteHost, username=remoteUser, password=remotePass)
+
+            with SCPClient(ssh.get_transport()) as scp:
+                scp.put(path, '{0}/remoteSbatchJob.sh'.format(remoteWorkingDir))
+
+            ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command('sbatch {0}/remoteSbatchJob.sh'.format(remoteWorkingDir))
+            self.remoteJobId = int(re.search("[0-9]*$", ssh_stdout.readlines()[0]).group(0))
+
+            while True:
+                ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(
+                    'scontrol show jobid -dd {0}'.format(self.remoteJobId))
+                line = ssh_stdout.readlines()[3]
+                jobStatus = re.search(u"JobState=(\w*)", line).group(1)
+                if jobStatus == "PENDING":
+                    self.status = STATUS_INIT
+                elif jobStatus == "RUNNING":
+                    self.status = STATUS_RUNNING
+                elif jobStatus == "CANCELLED":
+                    self.status = STATUS_ERROR
+                    break
+                elif jobStatus == "ERROR":
+                    self.status = STATUS_ERROR
+                    break
+                elif jobStatus == "COMPLETED":
+                    self.status = STATUS_FINISHED
+                    scp.get('{0}/{1}'.format(remoteWorkingDir, self.outputFile.replace("./","")), self.outputFile)
+                    break
+
+                self.sigJobStatusChanged.emit(self.status)
+                time.sleep(1)
+
+            self.sigJobStatusChanged.emit(self.status)
+
+        except Exception as e:
+            self.logger.error(u"Exception: {0}".format(e))
+            self.status = STATUS_ERROR
+
+            self.sigJobStatusChanged.emit(self.status)
         finally:
             self.sigFinishJob.emit()
 
     def _cancelLocalJob(self):
-        if self.localJobProc is not None:
+        if self.status in (STATUS_RUNNING, STATUS_INIT) and self.localJobProc is not None:
             os.killpg(os.getpgid(self.localJobProc.pid), SIGTERM)
-            self.runningJob = None
             self.localJobProc = None
 
+    def _cancelRemoteJob(self):
+        remoteConfig = self.jobParams[PARAM_REMOTE_JOB_CONFIG]
+        remoteHost = remoteConfig[u"host"]
+        remoteUser = remoteConfig[u"user"]
+        remotePass = remoteConfig[u"pass"]
+
+        ssh = SSHClient()
+        ssh.load_system_host_keys()
+        ssh.connect(hostname=remoteHost, username=remoteUser, password=remotePass)
+
+        ssh.exec_command('scancel {0}'.format(self.remoteJobId))
+
     def _finishJob(self):
-        if self.runningJob is not None:
-            outputFile = self.runningJob[1]
-            self.displayOutput(outputFile)
+        if os.path.isfile(self.outputFile):
+            self.displayOutput(self.outputFile)
 
         p = time.localtime()
         datestring = u'{0:d}-{1:02d}-{2:02d} {3:02d}:{4:02d}:{5:02d}'.format(p.tm_year, p.tm_mon, p.tm_mday, p.tm_hour,
@@ -96,22 +172,40 @@ class JobWidget(QWidget, Ui_Form):
         self.endTimeLabel.setText(datestring)
         self.jobTimeCounter.stop()
         self.jobProgressWidget.hide()
-        self.runningJob = None
-        self.localJobProc = None
+
+    def _getMpiCommand(self):
+        cmd = ["mpirun", "-n", self.jobParams[PARAM_SIM_PROCESSES],
+               "python", "bmg_raytrace_mpi_distr.py",
+               "--o", self.outputFile,
+               "--detX", self.jobParams[PARAM_DET_X],
+               "--detY", self.jobParams[PARAM_DET_Y],
+               "--detOffsetX", self.jobParams[PARAM_DET_OFFSET_X],
+               "--detOffsetY", self.jobParams[PARAM_DET_OFFSET_Y],
+               "--sdd", self.jobParams[PARAM_SIM_SDD],
+               "--samLength", self.jobParams[PARAM_SAM_LENGHT],
+               "--samRadius", self.jobParams[PARAM_SAM_RADIUS],
+               "--N", self.jobParams[PARAM_SIM_PHOTONS],
+               ]
+        return " ".join([str(part) for part in cmd])
+
+    def _getSlurmJobFile(self):
+        pass
 
     @pyqtSlot()
     def cancelJob(self):
-        if self.runningJob is None: return
-
-        if self.runningJob[0] == JOB_LOCAL:
+        if self.jobParams[PARAM_JOB_TYPE] == JOB_LOCAL:
             self._cancelLocalJob()
-            self.sigJobStatusChanged.emit(u"C")
+        elif self.jobParams[PARAM_JOB_TYPE] == JOB_REMOTE:
+            self._cancelRemoteJob()
+        self.status = STATUS_CANCELLED
+        self.sigJobStatusChanged.emit(self.status)
 
     @pyqtSlot()
     def closeJob(self):
-        if self.runningJob is not None:
+        if self.status in (STATUS_RUNNING, STATUS_INIT):
             message = QMessageBox()
-            ret = message.question(self, u'', u"Job is still running, do You want to cancel it?", message.Yes | message.No)
+            ret = message.question(self, u'', u"Job is still running, do You want to cancel it?",
+                                   message.Yes | message.No)
             if ret == message.No:
                 return
             else:
@@ -130,8 +224,13 @@ class JobWidget(QWidget, Ui_Form):
             self.cancelJob()
 
     def startJob(self):
-        Thread(target=self._startLocalJob).start()
-        self.sigJobStatusChanged.emit(u"R")
+        self.outputFile = self.getOutputName()
+
+        if self.jobParams[PARAM_JOB_TYPE] == JOB_LOCAL:
+            Thread(target=self._startLocalJob).start()
+        else:
+            Thread(target=self._startRemoteJob).start()
+
         self.jobTimeCounter.setInterval(1000)
         self.jobCancelCountDown = self.jobParams[PARAM_SIM_MAX_RUNNING_TIME] * 60 + 1
         self.jobTimerTick()
