@@ -6,9 +6,9 @@ import argparse
 import numpy as np
 from mpi4py import MPI
 
-from detector import Detector
-from sample import Sample
-from snippets import beam_path_within_sample
+from AbsCor.detector import Detector
+from AbsCor.sample import Sample
+from AbsCor.snippets import beam_path_within_sample
 
 comm = MPI.COMM_WORLD
 size = comm.Get_size()

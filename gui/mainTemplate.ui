@@ -690,6 +690,12 @@ background-color:#f6b442;
         <property name="elideMode">
          <enum>Qt::ElideNone</enum>
         </property>
+        <property name="tabsClosable">
+         <bool>true</bool>
+        </property>
+        <property name="movable">
+         <bool>true</bool>
+        </property>
        </widget>
       </item>
      </layout>
@@ -910,7 +916,7 @@ background-color:#f6b442;
      <y>37</y>
     </hint>
     <hint type="destinationlabel">
-     <x>-98</x>
+     <x>0</x>
      <y>40</y>
     </hint>
    </hints>
@@ -926,7 +932,7 @@ background-color:#f6b442;
      <y>177</y>
     </hint>
     <hint type="destinationlabel">
-     <x>-77</x>
+     <x>0</x>
      <y>180</y>
     </hint>
    </hints>
@@ -942,7 +948,7 @@ background-color:#f6b442;
      <y>271</y>
     </hint>
     <hint type="destinationlabel">
-     <x>-60</x>
+     <x>0</x>
      <y>277</y>
     </hint>
    </hints>
@@ -958,7 +964,7 @@ background-color:#f6b442;
      <y>445</y>
     </hint>
     <hint type="destinationlabel">
-     <x>-32</x>
+     <x>0</x>
      <y>442</y>
     </hint>
    </hints>
@@ -974,7 +980,7 @@ background-color:#f6b442;
      <y>437</y>
     </hint>
     <hint type="destinationlabel">
-     <x>-42</x>
+     <x>0</x>
      <y>472</y>
     </hint>
    </hints>
@@ -991,7 +997,23 @@ background-color:#f6b442;
     </hint>
     <hint type="destinationlabel">
      <x>322</x>
-     <y>620</y>
+     <y>570</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>jobTabs</sender>
+   <signal>tabCloseRequested(int)</signal>
+   <receiver>Form</receiver>
+   <slot>tabCloseRequest(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>929</x>
+     <y>173</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>1126</x>
+     <y>176</y>
     </hint>
    </hints>
   </connection>
@@ -1005,5 +1027,6 @@ background-color:#f6b442;
   <slot>setLocalJob(bool)</slot>
   <slot>setRemoteJob(bool)</slot>
   <slot>loadEdfFile()</slot>
+  <slot>tabCloseRequest(int)</slot>
  </slots>
 </ui>

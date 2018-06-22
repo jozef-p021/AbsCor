@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 
+import datetime
 import logging
 import os
 import re
@@ -12,10 +13,10 @@ from threading import Thread
 
 import fabio
 import matplotlib.pyplot as plt
-from PyQt4.QtCore import pyqtSlot, pyqtSignal, QString
-from PyQt4.QtGui import QWidget, QMessageBox
-from PySide.QtCore import QTimer
+from PyQt4.QtCore import pyqtSlot, pyqtSignal, QString, QTimer
+from PyQt4.QtGui import QWidget, QMessageBox, QHeaderView, QLabel
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
+from paramiko import SSHClient
 
 from AbsCor import JOB_LOCAL, PARAM_DET_X, PARAM_DET_Y, \
     PARAM_DET_OFFSET_X, PARAM_DET_OFFSET_Y, PARAM_SAM_LENGHT, PARAM_SAM_RADIUS, \
@@ -25,11 +26,7 @@ from AbsCor import JOB_LOCAL, PARAM_DET_X, PARAM_DET_Y, \
 from AbsCor.gui.jobTemplate import Ui_Form
 from detector import Detector
 from snippets import getScaledTimeHumanReadable
-from pexpect import pxssh
 from mpl_toolkits.mplot3d import Axes3D, axes3d
-from paramiko import SSHClient
-from scp import SCPClient
-import datetime
 
 
 class JobWidget(QWidget, Ui_Form):
@@ -55,6 +52,8 @@ class JobWidget(QWidget, Ui_Form):
         self.sigFinishJob.connect(self._finishJob)
         self.sigStartJob.connect(self.startJob)
         self.setupUi(self)
+
+        self.headerTableWidget.hide()
 
     def _startLocalJob(self):
         try:
@@ -118,7 +117,8 @@ class JobWidget(QWidget, Ui_Form):
             with SCPClient(ssh.get_transport()) as scp:
                 scp.put(path, '{0}/remoteSbatchJob.sh'.format(remoteWorkingDir))
 
-            ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command('sbatch {0}/remoteSbatchJob.sh'.format(remoteWorkingDir))
+            ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(
+                'sbatch {0}/remoteSbatchJob.sh'.format(remoteWorkingDir))
             self.remoteJobId = int(re.search("[0-9]*$", ssh_stdout.readlines()[0]).group(0))
 
             while True:
@@ -138,7 +138,7 @@ class JobWidget(QWidget, Ui_Form):
                     break
                 elif jobStatus == "COMPLETED":
                     self.status = STATUS_FINISHED
-                    scp.get('{0}/{1}'.format(remoteWorkingDir, self.outputFile.replace("./","")), self.outputFile)
+                    scp.get('{0}/{1}'.format(remoteWorkingDir, self.outputFile.replace("./", "")), self.outputFile)
                     break
 
                 self.sigJobStatusChanged.emit(self.status)
@@ -263,15 +263,31 @@ class JobWidget(QWidget, Ui_Form):
 
     def displayOutput(self, edfFile):
         output = fabio.openimage.openimage(edfFile)
-        det = Detector(self.jobParams[PARAM_DET_X], self.jobParams[PARAM_DET_Y])
-        det.SDD = self.jobParams[PARAM_SIM_SDD]
-        det.detector_offset(self.jobParams[PARAM_DET_OFFSET_X], self.jobParams[PARAM_DET_OFFSET_Y])
+        det = Detector(int(output.header[u'Dim_1']), int(output.header[u'Dim_2']))
+        det.SDD = float(output.header[u'DISTANCE'])
+        det.detector_offset(-float(output.header[u'CENTER X']), -float(output.header[u'CENTER Y']))
 
         fig = plt.figure()
         canvas = FigureCanvas(fig)
         ax = fig.add_subplot(1, 1, 1, projection=u'3d')
         ax.plot_surface(det.xd, det.yd, output.data, cmap=u'jet')
-        self.jobPlotFrame.layout().addWidget(canvas)
+        self.jobPlotFrame.layout().addWidget(canvas, 0, 0)
+
+        self.headerTableWidget.horizontalHeader().setResizeMode(QHeaderView.Stretch)
+        self.headerTableWidget.horizontalHeader().setResizeMode(0, QHeaderView.Interactive)
+        self.headerTableWidget.horizontalHeader().setResizeMode(1, QHeaderView.Stretch)
+        self.headerTableWidget.horizontalHeader().resizeSection(0, 200)
+        self.jobPlotFrame.layout().addWidget(self.headerTableWidget, 0, 1)
+
+        ignoreHeader = (u'{\nEDF_DataBlockID', u'EDF_BinarySize', u'EDF_HeaderSize', u'ByteOrder', u'DataType', u'Image', u'HeaderID', u'Size')
+        self.headerTableWidget.setRowCount(len(output.header) - len(ignoreHeader))
+        index = 0
+        for header, value in output.header.items():
+            if header in ignoreHeader: continue
+            self.headerTableWidget.setCellWidget(index, 0, QLabel(" {0}".format(header)))
+            self.headerTableWidget.setCellWidget(index, 1, QLabel(" {0}".format(value)))
+            index += 1
+
         fig.subplots_adjust(left=0, bottom=0, right=0.1, top=0.1)
         fig.tight_layout(pad=0.5)
         canvas.draw()

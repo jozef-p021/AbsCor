@@ -61,7 +61,7 @@ class Detector:
         savingData = ndimage.gaussian_filter(1 / self.data, sigma=20, order=0)
         output = fabio.edfimage.EdfImage()
         header = {}
-        header['DISTANCE'] = self.SDD
+        header['DISTANCE'] = float(self.SDD)
         header['PIXEL LENGTH'] = int(1e3 * self.pixel_size)
         header['PIXEL HEIGHT'] = int(1e3 * self.pixel_size)
         header['CENTER X'] = np.abs(self.offset[0])

@@ -3,11 +3,12 @@ from __future__ import print_function
 
 import argparse
 import logging
-import sys
 import ntpath
+import re
+import sys
 
 from PyQt4.QtCore import pyqtSlot
-from PyQt4.QtGui import QWidget, QApplication, QMainWindow, QFileDialog, QMessageBox, QErrorMessage
+from PyQt4.QtGui import QWidget, QApplication, QMainWindow, QFileDialog, QErrorMessage
 
 from AbsCor import PARAM_DET_X, PARAM_DET_Y, \
     PARAM_DET_OFFSET_X, PARAM_DET_OFFSET_Y, PARAM_SAM_LENGHT, PARAM_SAM_RADIUS, \
@@ -15,11 +16,12 @@ from AbsCor import PARAM_DET_X, PARAM_DET_Y, \
     PARAM_SIM_PROCESSES, PRESET_DETECTOR, PRESET_SAMPLE, PRESET_SIMULATION, PARAM_JOB_TYPE, JOB_LOCAL, JOB_REMOTE, \
     PARAM_REMOTE_JOB_CONFIG, STATUS_FINISHED
 from AbsCor.gui.mainTemplate import Ui_Form
-from jobWidget import JobWidget
-from snippets import parseXMLFile, parseXMLTags
+from AbsCor.jobWidget import JobWidget
+from AbsCor.snippets import parseXMLFile, parseXMLTags
 
 
 class MainWidget(QWidget, Ui_Form):
+    tabCount = 0
     jobCount = 0
     xmlConfigFile = None
     remoteJobConfig = None
@@ -108,41 +110,45 @@ class MainWidget(QWidget, Ui_Form):
 
     @pyqtSlot()
     def startJob(self):
+        self.tabCount += 1
         self.jobCount += 1
         jobWidget = JobWidget(self.getParams())
         tabIndex = self.jobTabs.addTab(jobWidget, u"Job {0} [ I ]".format(self.jobCount))
-        self.jobs[self.jobCount] = jobWidget
+        self.jobs[self.tabCount] = jobWidget
         self.showJobGroup(True)
         self.jobTabs.setCurrentIndex(tabIndex)
-        jobWidget.sigCloseJob.connect(lambda jobIndex=self.jobCount: self.closeJob(jobIndex))
+        jobWidget.sigCloseJob.connect(lambda jobIndex=self.tabCount: self.closeJob(jobIndex))
         jobWidget.sigJobStatusChanged.connect(
-            lambda status, jobIndex=self.jobCount: self.setJobStatus(status, jobIndex))
+            lambda status, jobIndex=self.tabCount: self.setJobStatus(status, jobIndex))
         jobWidget.sigStartJob.emit()
 
     @pyqtSlot()
     def loadEdfFile(self):
         filePath = QFileDialog.getOpenFileName(self, u'Choose edf to load', "./output/", filter="*.edf",
                                                selectedFilter="*.edf")
-        if filePath is None: return
-        else:
+        if filePath:
             try:
+                self.tabCount += 1
                 fileName = ntpath.basename(unicode(filePath))
                 jobWidget = JobWidget(self.getParams())
+                jobWidget.jobProgressWidget.hide()
+                jobWidget.runtimeWidget.hide()
                 tabIndex = self.jobTabs.addTab(jobWidget, u"{0}".format(fileName))
-                self.jobs[self.jobCount] = jobWidget
+                self.jobs[self.tabCount] = jobWidget
                 self.showJobGroup(True)
                 self.jobTabs.setCurrentIndex(tabIndex)
-                jobWidget.sigCloseJob.connect(lambda jobIndex=self.jobCount: self.closeJob(jobIndex))
+                jobWidget.sigCloseJob.connect(lambda jobIndex=self.tabCount: self.closeJob(jobIndex))
 
                 self.uiFinishWait()
                 jobWidget.status = STATUS_FINISHED
-                jobWidget.jobProgressWidget.hide()
-                jobWidget.runtimeWidget.hide()
                 jobWidget.displayOutput(unicode(filePath))
             except Exception as e:
                 message = QErrorMessage(self)
                 message.showMessage(u"Unable to load {0}. Error message: {1}".format(filePath, e.message))
                 jobWidget.closeJob()
+
+    def tabCloseRequest(self, int):
+        self.jobTabs.widget(int).closeJob()
 
     @pyqtSlot(bool)
     def setLocalJob(self, flag):
@@ -160,7 +166,8 @@ class MainWidget(QWidget, Ui_Form):
         jobWidget = self.jobs.get(jobIndex)
         if jobWidget is not None:
             tabIndex = self.jobTabs.indexOf(jobWidget)
-            self.jobTabs.setTabText(tabIndex, u"Job {0} [ {1} ]".format(jobIndex, status))
+            tabText = re.sub('\[.*\]', "[ {0} ]".format(status), unicode(self.jobTabs.tabText(tabIndex)))
+            self.jobTabs.setTabText(tabIndex, tabText)
 
     def closeJob(self, jobIndex):
         jobWidget = self.jobs[jobIndex]
@@ -179,7 +186,7 @@ class MainWidget(QWidget, Ui_Form):
             PARAM_SIM_MAX_RUNNING_TIME: int(self.simulationRunningTimeInput.value()),
             PARAM_SIM_NODES: int(self.simulationNodesInput.value()),
             PARAM_SIM_PROCESSES: int(self.simulationProcessesInput.value()),
-            PARAM_SIM_SDD: int(self.sampleSddhInput.value()),
+            PARAM_SIM_SDD: float(self.sampleSddhInput.value()),
             PARAM_JOB_TYPE: JOB_LOCAL if self.jobLocalRadio.isChecked() else JOB_REMOTE,
             PARAM_REMOTE_JOB_CONFIG: self.remoteJobConfig,
         }

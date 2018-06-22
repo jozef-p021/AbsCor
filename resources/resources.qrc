@@ -1,5 +1,6 @@
 <RCC>
   <qresource prefix="icons">
+    <file>expert_mode.png</file>
     <file>open-folder.png</file>
     <file>play.png</file>
     <file>remove.png</file>
