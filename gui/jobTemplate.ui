@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>426</width>
+    <width>415</width>
     <height>207</height>
    </rect>
   </property>
@@ -25,8 +25,15 @@
    </property>
    <item row="3" column="1">
     <widget class="QPushButton" name="pushButton">
+     <property name="toolTip">
+      <string>Close job tab</string>
+     </property>
      <property name="text">
       <string>Close job</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../resources/resources.qrc">
+       <normaloff>:/icons/remove.png</normaloff>:/icons/remove.png</iconset>
      </property>
     </widget>
    </item>
@@ -88,15 +95,22 @@
       </item>
       <item row="1" column="2">
        <widget class="QPushButton" name="cancelJobButton">
+        <property name="toolTip">
+         <string>Cancel runnin gjob</string>
+        </property>
         <property name="text">
          <string>Cancel job</string>
+        </property>
+        <property name="icon">
+         <iconset resource="../resources/resources.qrc">
+          <normaloff>:/icons/stop.png</normaloff>:/icons/stop.png</iconset>
         </property>
        </widget>
       </item>
       <item row="1" column="0">
        <widget class="QLabel" name="label_10">
         <property name="text">
-         <string>Runtime:</string>
+         <string>Runtime countdown:</string>
         </property>
        </widget>
       </item>
@@ -134,14 +148,14 @@
         </font>
        </property>
        <property name="text">
-        <string>End time:</string>
+        <string>Runtime:</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QLabel" name="endTimeLabel">
+      <widget class="QLabel" name="runTimeLabel">
        <property name="text">
-        <string>xxxx-xx-xx xx:xx:xx</string>
+        <string>None</string>
        </property>
       </widget>
      </item>
@@ -162,7 +176,9 @@
    </item>
   </layout>
  </widget>
- <resources/>
+ <resources>
+  <include location="../resources/resources.qrc"/>
+ </resources>
  <connections>
   <connection>
    <sender>cancelJobButton</sender>

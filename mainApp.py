@@ -118,6 +118,10 @@ class MainWidget(QWidget, Ui_Form):
             lambda status, jobIndex=self.jobCount: self.setJobStatus(status, jobIndex))
         jobWidget.sigStartJob.emit()
 
+    @pyqtSlot()
+    def loadEdfFile(self):
+        pass
+
     @pyqtSlot(bool)
     def setLocalJob(self, flag):
         if not flag: return

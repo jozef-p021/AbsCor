@@ -2,7 +2,7 @@ import argparse
 
 import fabio
 import matplotlib.pyplot as plt
-from bmg_raytrace import Detector
+from ideas.bmg_raytrace import Detector
 
 if __name__ == '__main__':
     p = argparse.ArgumentParser()

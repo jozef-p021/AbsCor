@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 
+SIMULATION_SCRIPT_PATH = u"./bmg_raytrace.py"
+
 JOB_LOCAL = 0
 JOB_REMOTE = 1
 

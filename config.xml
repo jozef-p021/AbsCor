@@ -13,7 +13,7 @@
 #!/bin/bash
 
 #SBATCH --partition=cfel
-#SBATCH --time=10:00:00             # Maximum time request
+#SBATCH --time={PARAM_SIM_MAX_RUNNING_TIME}             # Maximum time request
 #SBATCH --nodes={PARAM_SIM_NODES}                       # Number of nodes
 #SBATCH --workdir   {PARAM_REMOTE_WORKING_DIR}
 #SBATCH --job-name  simulation

@@ -21,7 +21,7 @@ from AbsCor import JOB_LOCAL, PARAM_DET_X, PARAM_DET_Y, \
     PARAM_DET_OFFSET_X, PARAM_DET_OFFSET_Y, PARAM_SAM_LENGHT, PARAM_SAM_RADIUS, \
     PARAM_SIM_SDD, PARAM_SIM_PHOTONS, PARAM_SIM_PROCESSES, PARAM_SIM_MAX_RUNNING_TIME, PARAM_JOB_TYPE, STATUS_INIT, \
     STATUS_ERROR, STATUS_CANCELLED, STATUS_RUNNING, STATUS_FINISHED, PARAM_REMOTE_JOB_CONFIG, \
-    PARAM_SIM_NODES, JOB_REMOTE
+    PARAM_SIM_NODES, JOB_REMOTE, SIMULATION_SCRIPT_PATH
 from AbsCor.gui.jobTemplate import Ui_Form
 from detector import Detector
 from snippets import getScaledTimeHumanReadable
@@ -29,6 +29,7 @@ from pexpect import pxssh
 from mpl_toolkits.mplot3d import Axes3D, axes3d
 from paramiko import SSHClient
 from scp import SCPClient
+import datetime
 
 
 class JobWidget(QWidget, Ui_Form):
@@ -40,12 +41,15 @@ class JobWidget(QWidget, Ui_Form):
     outputFile = None
     status = STATUS_INIT
     remoteJobId = None
+    jobStartTime = None
+    jobEndTime = None
 
     def __init__(self, jobParams, parent=None):
         super(JobWidget, self).__init__(parent)
         self.logger = logging.getLogger(u"Gui")
         self.jobParams = jobParams
         self.jobTimeCounter = QTimer()
+        self.jobTimeCounter.setInterval(1000)
         self.jobTimeCounter.timeout.connect(self.jobTimerTick)
 
         self.sigFinishJob.connect(self._finishJob)
@@ -87,8 +91,13 @@ class JobWidget(QWidget, Ui_Form):
             remoteUser = remoteConfig[u"user"]
             remotePass = remoteConfig[u"pass"]
 
+            if self.jobParams[PARAM_SIM_MAX_RUNNING_TIME] > 0:
+                maxRuntime = datetime.timedelta(minutes=self.jobParams[PARAM_SIM_MAX_RUNNING_TIME])
+            else:
+                maxRuntime = u"99-00:00:00"
+
             template = remoteConfig[u"template"]
-            template = template.replace(u"{PARAM_SIM_MAX_RUNNING_TIME}", unicode(self.jobParams[PARAM_SIM_MAX_RUNNING_TIME]))
+            template = template.replace(u"{PARAM_SIM_MAX_RUNNING_TIME}", unicode(maxRuntime))
             template = template.replace(u"{PARAM_SIM_NODES}", unicode(self.jobParams[PARAM_SIM_NODES]))
             template = template.replace(u"{PARAM_REMOTE_WORKING_DIR}", unicode(remoteWorkingDir))
             template = template.replace(u"{PARAM_JOB_COMMAND}", cmd)
@@ -166,16 +175,13 @@ class JobWidget(QWidget, Ui_Form):
         if os.path.isfile(self.outputFile):
             self.displayOutput(self.outputFile)
 
-        p = time.localtime()
-        datestring = u'{0:d}-{1:02d}-{2:02d} {3:02d}:{4:02d}:{5:02d}'.format(p.tm_year, p.tm_mon, p.tm_mday, p.tm_hour,
-                                                                             p.tm_min, p.tm_sec)
-        self.endTimeLabel.setText(datestring)
+        self.jobEndTime = time.time()
         self.jobTimeCounter.stop()
         self.jobProgressWidget.hide()
 
     def _getMpiCommand(self):
         cmd = ["mpirun", "-n", self.jobParams[PARAM_SIM_PROCESSES],
-               "python", "bmg_raytrace_mpi_distr.py",
+               "python", SIMULATION_SCRIPT_PATH,
                "--o", self.outputFile,
                "--detX", self.jobParams[PARAM_DET_X],
                "--detY", self.jobParams[PARAM_DET_Y],
@@ -215,13 +221,18 @@ class JobWidget(QWidget, Ui_Form):
 
     @pyqtSlot()
     def jobTimerTick(self):
-        self.jobCancelCountDown -= 1
-        interval = self.jobParams[PARAM_SIM_MAX_RUNNING_TIME] * 60
-        self.progressBar.setFormat(u'{0}'.format(getScaledTimeHumanReadable(self.jobCancelCountDown)))
-        self.progressBar.setValue((100. / interval) * self.jobCancelCountDown)
+        if self.jobParams[PARAM_SIM_MAX_RUNNING_TIME] > 0:
+            self.jobCancelCountDown -= 1
+            interval = self.jobParams[PARAM_SIM_MAX_RUNNING_TIME] * 60
+            self.progressBar.setFormat(u'{0}'.format(getScaledTimeHumanReadable(self.jobCancelCountDown)))
+            self.progressBar.setValue((100. / interval) * self.jobCancelCountDown)
 
-        if self.jobCancelCountDown <= 0:
-            self.cancelJob()
+            if self.jobCancelCountDown <= 0:
+                self.cancelJob()
+
+        if self.jobStartTime is not None:
+            runtime = int(time.time() - self.jobStartTime)
+            self.runTimeLabel.setText(u'{0}'.format(getScaledTimeHumanReadable(runtime)))
 
     def startJob(self):
         self.outputFile = self.getOutputName()
@@ -231,14 +242,19 @@ class JobWidget(QWidget, Ui_Form):
         else:
             Thread(target=self._startRemoteJob).start()
 
-        self.jobTimeCounter.setInterval(1000)
-        self.jobCancelCountDown = self.jobParams[PARAM_SIM_MAX_RUNNING_TIME] * 60 + 1
-        self.jobTimerTick()
+        if self.jobParams[PARAM_SIM_MAX_RUNNING_TIME] > 0:
+            self.jobCancelCountDown = self.jobParams[PARAM_SIM_MAX_RUNNING_TIME] * 60 + 1
+            self.jobTimerTick()
+        else:
+            self.progressBar.setFormat(u'Unlimited')
+            self.progressBar.setValue(100)
+
+        self.jobStartTime = time.time()
         p = time.localtime()
         datestring = u'{0:d}-{1:02d}-{2:02d} {3:02d}:{4:02d}:{5:02d}'.format(p.tm_year, p.tm_mon, p.tm_mday, p.tm_hour,
                                                                              p.tm_min, p.tm_sec)
-        self.initTimeLabel.setText(datestring)
         self.jobTimeCounter.start()
+        self.initTimeLabel.setText(datestring)
         self.jobProgressWidget.show()
 
     def getOutputName(self):
