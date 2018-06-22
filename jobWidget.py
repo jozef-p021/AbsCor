@@ -24,8 +24,8 @@ from AbsCor import JOB_LOCAL, PARAM_DET_X, PARAM_DET_Y, \
     STATUS_ERROR, STATUS_CANCELLED, STATUS_RUNNING, STATUS_FINISHED, PARAM_REMOTE_JOB_CONFIG, \
     PARAM_SIM_NODES, JOB_REMOTE, SIMULATION_SCRIPT_PATH
 from AbsCor.gui.jobTemplate import Ui_Form
-from detector import Detector
-from snippets import getScaledTimeHumanReadable
+from AbsCor.detector import Detector
+from AbsCor.snippets import getScaledTimeHumanReadable
 from mpl_toolkits.mplot3d import Axes3D, axes3d
 
 
@@ -279,7 +279,9 @@ class JobWidget(QWidget, Ui_Form):
         self.headerTableWidget.horizontalHeader().resizeSection(0, 200)
         self.jobPlotFrame.layout().addWidget(self.headerTableWidget, 0, 1)
 
-        ignoreHeader = (u'{\nEDF_DataBlockID', u'EDF_BinarySize', u'EDF_HeaderSize', u'ByteOrder', u'DataType', u'Image', u'HeaderID', u'Size')
+        ignoreHeader = (
+        u'{\nEDF_DataBlockID', u'EDF_BinarySize', u'EDF_HeaderSize', u'ByteOrder', u'DataType', u'Image', u'HeaderID',
+        u'Size')
         self.headerTableWidget.setRowCount(len(output.header) - len(ignoreHeader))
         index = 0
         for header, value in output.header.items():

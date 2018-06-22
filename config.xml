@@ -23,6 +23,7 @@
 #SBATCH --mail-user martin.domaracky@desy.de  # Email to which notifications will be sent
 
 source /gpfs/cfel/cxi/common/cfelsoft-rh7/setup.sh
+export PYTHONPATH=$PYTHONPATH:/home/domarm/jobs/scripts
 module load cfel-python2/latest
 {PARAM_JOB_COMMAND}
             </attribute>
