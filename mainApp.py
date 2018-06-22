@@ -4,15 +4,16 @@ from __future__ import print_function
 import argparse
 import logging
 import sys
+import ntpath
 
 from PyQt4.QtCore import pyqtSlot
-from PyQt4.QtGui import QWidget, QApplication, QMainWindow
+from PyQt4.QtGui import QWidget, QApplication, QMainWindow, QFileDialog, QMessageBox, QErrorMessage
 
 from AbsCor import PARAM_DET_X, PARAM_DET_Y, \
     PARAM_DET_OFFSET_X, PARAM_DET_OFFSET_Y, PARAM_SAM_LENGHT, PARAM_SAM_RADIUS, \
     PARAM_SIM_SDD, PARAM_SIM_PHOTONS, PARAM_SIM_MAX_RUNNING_TIME, PARAM_SIM_NODES, \
     PARAM_SIM_PROCESSES, PRESET_DETECTOR, PRESET_SAMPLE, PRESET_SIMULATION, PARAM_JOB_TYPE, JOB_LOCAL, JOB_REMOTE, \
-    PARAM_REMOTE_JOB_CONFIG
+    PARAM_REMOTE_JOB_CONFIG, STATUS_FINISHED
 from AbsCor.gui.mainTemplate import Ui_Form
 from jobWidget import JobWidget
 from snippets import parseXMLFile, parseXMLTags
@@ -120,7 +121,28 @@ class MainWidget(QWidget, Ui_Form):
 
     @pyqtSlot()
     def loadEdfFile(self):
-        pass
+        filePath = QFileDialog.getOpenFileName(self, u'Choose edf to load', "./output/", filter="*.edf",
+                                               selectedFilter="*.edf")
+        if filePath is None: return
+        else:
+            try:
+                fileName = ntpath.basename(unicode(filePath))
+                jobWidget = JobWidget(self.getParams())
+                tabIndex = self.jobTabs.addTab(jobWidget, u"{0}".format(fileName))
+                self.jobs[self.jobCount] = jobWidget
+                self.showJobGroup(True)
+                self.jobTabs.setCurrentIndex(tabIndex)
+                jobWidget.sigCloseJob.connect(lambda jobIndex=self.jobCount: self.closeJob(jobIndex))
+
+                self.uiFinishWait()
+                jobWidget.status = STATUS_FINISHED
+                jobWidget.jobProgressWidget.hide()
+                jobWidget.runtimeWidget.hide()
+                jobWidget.displayOutput(unicode(filePath))
+            except Exception as e:
+                message = QErrorMessage(self)
+                message.showMessage(u"Unable to load {0}. Error message: {1}".format(filePath, e.message))
+                jobWidget.closeJob()
 
     @pyqtSlot(bool)
     def setLocalJob(self, flag):

@@ -194,9 +194,6 @@ class JobWidget(QWidget, Ui_Form):
                ]
         return " ".join([str(part) for part in cmd])
 
-    def _getSlurmJobFile(self):
-        pass
-
     @pyqtSlot()
     def cancelJob(self):
         if self.jobParams[PARAM_JOB_TYPE] == JOB_LOCAL:

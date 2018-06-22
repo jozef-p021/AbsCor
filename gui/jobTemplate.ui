@@ -118,61 +118,66 @@
     </widget>
    </item>
    <item row="1" column="0" colspan="2">
-    <layout class="QHBoxLayout" name="horizontalLayout">
-     <item>
-      <widget class="QLabel" name="label_2">
-       <property name="font">
-        <font>
-         <weight>75</weight>
-         <bold>true</bold>
-        </font>
-       </property>
-       <property name="text">
-        <string>Init time:</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLabel" name="initTimeLabel">
-       <property name="text">
-        <string>xxxx-xx-xx xx:xx:xx</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLabel" name="label_6">
-       <property name="font">
-        <font>
-         <weight>75</weight>
-         <bold>true</bold>
-        </font>
-       </property>
-       <property name="text">
-        <string>Runtime:</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLabel" name="runTimeLabel">
-       <property name="text">
-        <string>None</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <spacer name="horizontalSpacer_2">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-    </layout>
+    <widget class="QWidget" name="runtimeWidget" native="true">
+     <layout class="QHBoxLayout" name="horizontalLayout_2">
+      <property name="margin">
+       <number>0</number>
+      </property>
+      <item>
+       <widget class="QLabel" name="label_2">
+        <property name="font">
+         <font>
+          <weight>75</weight>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>Init time:</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="initTimeLabel">
+        <property name="text">
+         <string>xxxx-xx-xx xx:xx:xx</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="label_6">
+        <property name="font">
+         <font>
+          <weight>75</weight>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>Runtime:</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="runTimeLabel">
+        <property name="text">
+         <string>None</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer_2">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>87</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+     </layout>
+    </widget>
    </item>
   </layout>
  </widget>
