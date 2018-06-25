@@ -13,6 +13,7 @@ from threading import Thread
 
 import fabio
 import matplotlib.pyplot as plt
+import paramiko
 from PyQt4.QtCore import pyqtSlot, pyqtSignal, QString, QTimer
 from PyQt4.QtGui import QWidget, QMessageBox, QHeaderView, QLabel
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
@@ -111,6 +112,7 @@ class JobWidget(QWidget, Ui_Form):
             from paramiko import SSHClient
             from scp import SCPClient
             ssh = SSHClient()
+            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             ssh.load_system_host_keys()
             ssh.connect(hostname=remoteHost, username=remoteUser, password=remotePass)
 
@@ -167,8 +169,8 @@ class JobWidget(QWidget, Ui_Form):
 
         ssh = SSHClient()
         ssh.load_system_host_keys()
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         ssh.connect(hostname=remoteHost, username=remoteUser, password=remotePass)
-
         ssh.exec_command('scancel {0}'.format(self.remoteJobId))
 
     def _finishJob(self):
