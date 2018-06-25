@@ -22,7 +22,7 @@ from AbsCor import JOB_LOCAL, PARAM_DET_X, PARAM_DET_Y, \
     PARAM_DET_OFFSET_X, PARAM_DET_OFFSET_Y, PARAM_SAM_LENGHT, PARAM_SAM_RADIUS, \
     PARAM_SIM_SDD, PARAM_SIM_PHOTONS, PARAM_SIM_PROCESSES, PARAM_SIM_MAX_RUNNING_TIME, PARAM_JOB_TYPE, STATUS_INIT, \
     STATUS_ERROR, STATUS_CANCELLED, STATUS_RUNNING, STATUS_FINISHED, PARAM_REMOTE_JOB_CONFIG, \
-    PARAM_SIM_NODES, JOB_REMOTE, SIMULATION_SCRIPT_PATH
+    PARAM_SIM_NODES, JOB_REMOTE, SIMULATION_SCRIPT_PATH, STATUS_WAITING
 from AbsCor.gui.jobTemplate import Ui_Form
 from AbsCor.detector import Detector
 from AbsCor.snippets import getScaledTimeHumanReadable
@@ -127,7 +127,7 @@ class JobWidget(QWidget, Ui_Form):
                 line = ssh_stdout.readlines()[3]
                 jobStatus = re.search(u"JobState=(\w*)", line).group(1)
                 if jobStatus == "PENDING":
-                    self.status = STATUS_INIT
+                    self.status = STATUS_WAITING
                 elif jobStatus == "RUNNING":
                     self.status = STATUS_RUNNING
                 elif jobStatus == "CANCELLED":
