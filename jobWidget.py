@@ -140,7 +140,7 @@ class JobWidget(QWidget, Ui_Form):
                     break
                 elif jobStatus == "COMPLETED":
                     self.status = STATUS_FINISHED
-                    scp.get('{0}/{1}'.format(remoteWorkingDir, self.outputFile.replace("./", "")), self.outputFile)
+                    scp.get('{0}/{1}'.format(remoteWorkingDir, self.outputFile), self.outputFile)
                     break
 
                 self.sigJobStatusChanged.emit(self.status)
@@ -261,7 +261,7 @@ class JobWidget(QWidget, Ui_Form):
         datestring = u'{0:d}-{1:02d}-{2:02d}_{3:02d}-{4:02d}-{5:02d}'.format(p.tm_year, p.tm_mon, p.tm_mday, p.tm_hour,
                                                                              p.tm_min, p.tm_sec)
         fileName = u"{0}.{1}".format(datestring, u"edf")
-        return os.path.join(u"./output", fileName)
+        return os.path.join(u"./output", fileName).replace("\\", "/")
 
     def displayOutput(self, edfFile):
         output = fabio.openimage.openimage(edfFile)
