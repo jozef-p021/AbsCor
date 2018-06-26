@@ -14,13 +14,14 @@ class Sample:
     # mu = 0.179	#Absorption length [mm] for gold CeO2 at  60 keV
     mu = 0.513  # Absorption length [mm] for 1.5 mm diameter Zr60Al15Ni25 BMG (MARC780 from Mihai) at 60 keV
 
-    def __init__(self, length=10.0, radius=0.5):
+    def __init__(self, length=10.0, radius=0.5, mu=0.513):
         """
         here we initialize cylinder sample geometry,
         namely	its length and radius
         """
         self.length = length
         self.radius = radius
+        self.mu = mu
         self.xs = 0.0
         self.ys = 0.0
         self.zs = 0.0

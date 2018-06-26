@@ -14,7 +14,7 @@ from AbsCor import PARAM_DET_X, PARAM_DET_Y, \
     PARAM_DET_OFFSET_X, PARAM_DET_OFFSET_Y, PARAM_SAM_LENGHT, PARAM_SAM_RADIUS, \
     PARAM_SIM_SDD, PARAM_SIM_PHOTONS, PARAM_SIM_MAX_RUNNING_TIME, PARAM_SIM_NODES, \
     PARAM_SIM_PROCESSES, PRESET_DETECTOR, PRESET_SAMPLE, PRESET_SIMULATION, PARAM_JOB_TYPE, JOB_LOCAL, JOB_REMOTE, \
-    PARAM_REMOTE_JOB_CONFIG, STATUS_FINISHED
+    PARAM_REMOTE_JOB_CONFIG, STATUS_FINISHED, PARAM_SAM_ABSORPTION_LENGTH
 from AbsCor.gui.mainTemplate import Ui_Form
 from AbsCor.jobWidget import JobWidget
 from AbsCor.snippets import parseXMLFile, parseXMLTags
@@ -98,6 +98,7 @@ class MainWidget(QWidget, Ui_Form):
         label, config = self.presets[PRESET_SAMPLE][index]
         self.sampleLengthInput.setValue(config[u"Length"])
         self.sampleRadiusInput.setValue(config[u"Radius"])
+        self.sampleAbsorptionLengthInput.setValue(config[u"Absorption length"])
 
     @pyqtSlot()
     def setSimulationPreset(self, index):
@@ -182,6 +183,7 @@ class MainWidget(QWidget, Ui_Form):
             PARAM_DET_OFFSET_Y: float(self.detectorOffsetYInput.value()),
             PARAM_SAM_LENGHT: float(self.sampleLengthInput.value()),
             PARAM_SAM_RADIUS: float(self.sampleRadiusInput.value()),
+            PARAM_SAM_ABSORPTION_LENGTH: float(self.sampleAbsorptionLengthInput.value()),
             PARAM_SIM_PHOTONS: int(self.simulationPhotonsInput.value()),
             PARAM_SIM_MAX_RUNNING_TIME: int(self.simulationRunningTimeInput.value()),
             PARAM_SIM_NODES: int(self.simulationNodesInput.value()),

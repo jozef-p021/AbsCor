@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'mainTemplate.ui'
 #
-# Created by: PyQt4 UI code generator 4.12.1
+# Created by: PyQt4 UI code generator 4.11.4
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -451,6 +451,25 @@ class Ui_Form(object):
         self.sampleLengthInput.setMaximum(999999999.0)
         self.sampleLengthInput.setObjectName(_fromUtf8("sampleLengthInput"))
         self.gridLayout_3.addWidget(self.sampleLengthInput, 0, 1, 1, 1)
+        self.label_10 = QtGui.QLabel(self.sampleGroup)
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.label_10.sizePolicy().hasHeightForWidth())
+        self.label_10.setSizePolicy(sizePolicy)
+        self.label_10.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.label_10.setObjectName(_fromUtf8("label_10"))
+        self.gridLayout_3.addWidget(self.label_10, 1, 0, 1, 1)
+        self.sampleAbsorptionLengthInput = QtGui.QDoubleSpinBox(self.sampleGroup)
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.sampleAbsorptionLengthInput.sizePolicy().hasHeightForWidth())
+        self.sampleAbsorptionLengthInput.setSizePolicy(sizePolicy)
+        self.sampleAbsorptionLengthInput.setDecimals(3)
+        self.sampleAbsorptionLengthInput.setMaximum(999999999.0)
+        self.sampleAbsorptionLengthInput.setObjectName(_fromUtf8("sampleAbsorptionLengthInput"))
+        self.gridLayout_3.addWidget(self.sampleAbsorptionLengthInput, 1, 1, 1, 1)
         self.gridLayout_5.addLayout(self.gridLayout_3, 2, 0, 1, 2)
         self.label_6 = QtGui.QLabel(self.sampleGroup)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Preferred)
@@ -534,6 +553,8 @@ class Ui_Form(object):
         self.label_7.setText(_translate("Form", "Length:", None))
         self.label_8.setText(_translate("Form", "Radius:", None))
         self.sampleLengthInput.setSuffix(_translate("Form", " mm", None))
+        self.label_10.setText(_translate("Form", "Absorption length:", None))
+        self.sampleAbsorptionLengthInput.setSuffix(_translate("Form", " mm", None))
         self.label_6.setText(_translate("Form", "Preset:", None))
 
 import resources_rc

@@ -45,6 +45,7 @@ module load cfel-python2/latest
         <sample label="Sample 1">
             <attribute name="Length" type="float">20</attribute>
             <attribute name="Radius" type="float">0.75</attribute>
+            <attribute name="Absorption length" type="float">0.513</attribute>
         </sample>
         <simulation label="Default">
             <attribute name="Photons" type="int">1000</attribute>
