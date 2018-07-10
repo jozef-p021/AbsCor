@@ -69,7 +69,7 @@ class Detector:
         header['sample_radius'] = sample.radius
         header['photons_per_pixel'] = numberOfPhotons
         output.header = header
-        output.data = savingData
+        output.data = np.float32(savingData)
         if fileName is None:
             fileName = 'AbsCor_' + param + datestring + '.edf'
 

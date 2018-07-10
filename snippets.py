@@ -15,7 +15,7 @@ def generate_photon_statistics(slitscan, xo=0, mirror=False):
         sign = -1
     else:
         sign = 1
-    data = np.loadtxt(slitscan, skiprows=15, usecols=(0, 3))
+    data = np.loadtxt(slitscan, usecols=(0, 1), comments='#')
     x = sign * (data[:, 0] - xo)
     y = data[:, 1] - data[0, 1]
     dx = np.mean(np.diff(x))
