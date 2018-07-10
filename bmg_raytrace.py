@@ -58,8 +58,8 @@ if rank == 0:
         recieveCount -= 1
 
 
-    slit_x, cdf_x = generate_photon_statistics('./slit_scan/slit_05x05_00001.fio', 1.1, True)
-    slit_y, cdf_y = generate_photon_statistics('./slit_scan/slit_05x05_00002.fio', 2.3, True)
+    slit_x, cdf_x = generate_photon_statistics('./slit_scan/CX_slit_05x05_hasylab_00021.fio', 1.14, True)
+    slit_y, cdf_y = generate_photon_statistics('./slit_scan/CY_slit_05x05_hasylab_00020.fio', 3.47, False)
 
     while len(ranges) != 0:
         dest = comm.recv(source=MPI.ANY_SOURCE)
